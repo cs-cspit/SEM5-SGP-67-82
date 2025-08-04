@@ -1,0 +1,134 @@
+/* Salary Report Styles - SPA Layout */
+.salary-report-page {
+  background: transparent;
+  min-height: 100%;
+  padding: 0;
+  width: 100%;
+}
+
+.salary-report-container {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Header Section */
+.salary-report-header {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  position: relative;
+  overflow: hidden;
+}
+
+.salary-report-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa, #93c5fd);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.header-info {
+  flex: 1;
+}
+
+.salary-report-title {
+  color: #1e293b;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.salary-report-subtitle {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.salary-report-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #3b82f6;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.date-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Header Actions */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.download-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.download-btn:hover::before {
+  left: 100%;
+}
+
+.download-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.download-btn:active {
+  transform: translateY(0);
+}
+
+.download-icon {
+  width: 16px;
+  height: 16px;
+}
+

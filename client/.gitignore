@@ -13,19 +13,27 @@ dist-ssr
 
 # Environment variables
 .env
+.env.local
+.env.*.local
 
 # Dependencies
 node_modules
+client/node_modules
+server/node_modules
 
 # Local config files
 *.local
 
 # Editor directories and files
 .vscode/
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Build & temp
+coverage/
+.cache/

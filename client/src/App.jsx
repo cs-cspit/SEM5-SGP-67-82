@@ -1,8 +1,23 @@
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import DashboardLayout from "./Layouts/DashboardLayout";
+import Dashboard from "./pages/Dashboard";
+import Attendance from "./pages/Attendance";
+import LeaveManagement from "./pages/LeaveManagement";
+import EmployeeDirectory from "./pages/EmployeeDirectory";
+import SalaryReport from "./pages/SalaryReport";
+
 function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-400 to-purple-600">
-      <h1 className="text-white text-4xl font-bold">Tailwind is Working! 🎉</h1>
-    </div>
+    <Routes>
+      <Route path="/" element={<DashboardLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="attendance" element={<Attendance />} />
+        <Route path="leave-management" element={<LeaveManagement />} />
+        <Route path="employee-directory" element={<EmployeeDirectory />} />
+        <Route path="salary-report" element={<SalaryReport />} />
+      </Route>
+    </Routes>
   );
 }
 

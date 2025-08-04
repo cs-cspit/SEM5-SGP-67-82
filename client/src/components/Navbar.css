@@ -1,0 +1,156 @@
+/* Navbar Styles - Fixed Top Position */
+.navbar {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e0f2fe 100%);
+  box-shadow: 0 2px 20px rgba(33, 150, 243, 0.1);
+  border-bottom: 1px solid rgba(33, 150, 243, 0.1);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  backdrop-filter: blur(20px);
+  height: 70px;
+  width: 100%;
+  z-index: 1000;
+}
+
+.navbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  pointer-events: none;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.navbar-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #1976d2, #0d47a1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.title-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0d47a1;
+  margin: 0;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.breadcrumb-separator {
+  color: #cbd5e1;
+}
+
+.breadcrumb-current {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.navbar-center {
+  flex: 1;
+  max-width: 500px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-radius: 12px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  color: #1e293b;
+}
+
+.search-input::placeholder {
+  color: #94a3b8;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #1976d2;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  width: 18px;
+  height: 18px;
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+
+
+
+.mobile-menu-btn {
+  display: none;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.mobile-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(33, 150, 243, 0.3);
+}
+
+.mobile-menu-icon {
+  width: 20px;
+  height: 20px;
+  color: #1976d2;
+}

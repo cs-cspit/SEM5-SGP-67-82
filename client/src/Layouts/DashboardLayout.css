@@ -1,0 +1,144 @@
+/* Dashboard Layout Styles - Gmail-like SPA */
+.dashboard-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #f1f5f9 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.layout-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(33, 150, 243, 0.1);
+  box-shadow: 0 2px 20px rgba(33, 150, 243, 0.08);
+}
+
+.layout-sidebar {
+  position: fixed;
+  top: 70px;
+  left: 0;
+  width: 280px;
+  height: calc(100vh - 70px);
+  z-index: 900;
+  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 50%, #81d4fa 100%);
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 2px 0 20px rgba(33, 150, 243, 0.1);
+  border-right: 1px solid rgba(33, 150, 243, 0.1);
+}
+
+.layout-main {
+  position: fixed;
+  top: 70px;
+  left: 280px;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  z-index: 100;
+}
+
+.main-content {
+  padding: 32px;
+  min-height: calc(100vh - 70px);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
+}
+
+/* Smooth transitions for content changes */
+.main-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar Styling */
+.layout-sidebar::-webkit-scrollbar,
+.layout-main::-webkit-scrollbar {
+  width: 6px;
+}
+
+.layout-sidebar::-webkit-scrollbar-track,
+.layout-main::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.layout-sidebar::-webkit-scrollbar-thumb,
+.layout-main::-webkit-scrollbar-thumb {
+  background: rgba(33, 150, 243, 0.3);
+  border-radius: 3px;
+}
+
+.layout-sidebar::-webkit-scrollbar-thumb:hover,
+.layout-main::-webkit-scrollbar-thumb:hover {
+  background: rgba(33, 150, 243, 0.5);
+}
+
+/* Focus states for accessibility */
+.layout-main:focus {
+  outline: none;
+}
+
+/* Content area responsive adjustments */
+.content-wrapper {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Loading state */
+.content-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #64748b;
+}
+
+/* Error state */
+.content-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #ef4444;
+  text-align: center;
+}
+
+/* Active navigation highlight */
+.nav-active {
+  position: relative;
+}
+
+.nav-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #1976d2, #0d47a1);
+  border-radius: 0 4px 4px 0;
+}
