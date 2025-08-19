@@ -1,0 +1,149 @@
+/* Edit Employee Modal CSS */
+/* Inherit most styles from AddEmployeeModal.css */
+
+/* Modal Overlay - Override for Edit Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0; /* Start from top of viewport */
+  left: 280px; /* Account for sidebar width */
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100; /* Higher than sidebar (900) and navbar (1000) */
+  padding: 60px 40px 40px 40px; /* Extra top padding to clear navbar */
+  backdrop-filter: blur(2px);
+  overflow-y: auto; /* Allow scrolling if needed */
+}
+
+/* Modal Container - Override for Edit Modal */
+.modal-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 600px; /* Smaller, more focused width */
+  max-height: 70vh; /* Better height for single-step form */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transform: translateY(0);
+  animation: modalFadeIn 0.3s ease-out;
+  margin: 0 auto; /* Center the modal horizontally */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: #6b7280;
+  z-index: 1;
+}
+
+.input-with-icon input {
+  padding-left: 40px !important;
+}
+
+.form-section {
+  margin-bottom: 24px; /* Restored from 20px */
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0; /* Restored margin */
+  padding-bottom: 12px; /* Restored padding */
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.section-title svg {
+  color: #3b82f6;
+}
+
+.btn-delete {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Restored gap */
+  padding: 12px 24px; /* Restored padding */
+  border-radius: 8px; /* Restored border radius */
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  min-width: 120px; /* Restored from 100px */
+  justify-content: center;
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.btn-delete:hover {
+  background-color: #fecaca;
+  border-color: #f87171;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .modal-overlay {
+    top: 0;
+    left: 0; /* Remove sidebar offset on mobile */
+    padding: 80px 20px 20px 20px; /* Extra top padding for mobile navbar */
+  }
+  
+  .modal-container {
+    max-height: 85vh;
+    max-width: 90vw;
+  }
+  
+  .form-actions-left,
+  .form-actions-right {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .btn-delete {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Better centering for larger screens */
+@media (min-width: 769px) {
+  .modal-overlay {
+    padding: 80px 50px 50px 50px; /* Extra top padding to clear navbar */
+  }
+  
+  .modal-container {
+    min-height: 400px; /* Ensure consistent height for edit modal */
+  }
+}

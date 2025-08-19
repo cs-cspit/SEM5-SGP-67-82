@@ -1,5 +1,5 @@
 // client/src/pages/Dashboard.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   PieChart,
   Pie,
@@ -29,7 +29,23 @@ import {
 
 import "./Dashboard.css";
 
+const API_BASE_URL = "http://localhost:5000/api";
+
 const Dashboard = () => {
+  const [dashboardData, setDashboardData] = useState({
+    totalEmployees: 0,
+    totalDepartments: 0,
+    attendanceToday: { present: 0, late: 0, absent: 0 },
+    pendingLeaves: 0,
+    departmentStats: [],
+    attendanceTrend: [],
+  });
+  const [recentActivities, setRecentActivities] = useState({
+    recentLeaves: [],
+    recentEmployees: [],
+  });
+  const [loading, setLoading] = useState(true);
+
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -37,45 +53,113 @@ const Dashboard = () => {
     day: "numeric",
   });
 
+  // Fetch dashboard statistics
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
+      if (!response.ok) throw new Error("Failed to fetch dashboard stats");
+      const data = await response.json();
+      setDashboardData(data);
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      // Keep default empty values on error
+    }
+  };
+
+  // Fetch recent activities
+  const fetchRecentActivities = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/dashboard/activities`);
+      if (!response.ok) throw new Error("Failed to fetch recent activities");
+      const data = await response.json();
+      setRecentActivities(data);
+    } catch (error) {
+      console.error("Error fetching recent activities:", error);
+      // Keep default empty values on error
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      await Promise.all([fetchDashboardStats(), fetchRecentActivities()]);
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  // Transform data for charts
   const stats = [
     {
       title: "Total Employees",
-      value: "50",
+      value: dashboardData.totalEmployees.toString(),
       icon: Users,
       type: "total",
       chartData: [
-        { name: "Active", value: 50, color: "#3b82f6" },
-        { name: "Inactive", value: 47, color: "#e5e7eb" },
+        {
+          name: "Active",
+          value: dashboardData.totalEmployees,
+          color: "#3b82f6",
+        },
+        {
+          name: "Inactive",
+          value: Math.max(0, dashboardData.totalEmployees - 3),
+          color: "#e5e7eb",
+        },
       ],
     },
     {
       title: "Present Today",
-      value: "38",
+      value: dashboardData.attendanceToday.present.toString(),
       icon: UserCheck,
       type: "present",
       chartData: [
-        { name: "Present", value: 38, color: "#10b981" },
-        { name: "Total", value: 355, color: "#e5e7eb" },
+        {
+          name: "Present",
+          value: dashboardData.attendanceToday.present,
+          color: "#10b981",
+        },
+        {
+          name: "Total",
+          value: dashboardData.totalEmployees,
+          color: "#e5e7eb",
+        },
       ],
     },
     {
       title: "Absent Today",
-      value: "12",
+      value: dashboardData.attendanceToday.absent.toString(),
       icon: UserX,
       type: "absent",
       chartData: [
-        { name: "Absent", value: 12, color: "#ef4444" },
-        { name: "Present", value: 892, color: "#e5e7eb" },
+        {
+          name: "Absent",
+          value: dashboardData.attendanceToday.absent,
+          color: "#ef4444",
+        },
+        {
+          name: "Present",
+          value: dashboardData.attendanceToday.present,
+          color: "#e5e7eb",
+        },
       ],
     },
     {
       title: "Late Arrivals",
-      value: "0",
+      value: dashboardData.attendanceToday.late.toString(),
       icon: Clock,
       type: "late",
       chartData: [
-        { name: "Late", value: 0, color: "#f59e0b" },
-        { name: "On Time", value: 876, color: "#e5e7eb" },
+        {
+          name: "Late",
+          value: dashboardData.attendanceToday.late,
+          color: "#f59e0b",
+        },
+        {
+          name: "On Time",
+          value: dashboardData.attendanceToday.present,
+          color: "#e5e7eb",
+        },
       ],
     },
   ];
@@ -87,28 +171,24 @@ const Dashboard = () => {
     { icon: TrendingUp, title: "Reports", href: "/salary-report" },
   ];
 
-  const recentActivities = [
-    {
-      icon: UserCheck,
-      title: "John Doe checked in",
-      time: "2 minutes ago",
-    },
-    {
-      icon: Calendar,
-      title: "New leave request from Sarah Wilson",
-      time: "15 minutes ago",
-    },
-    {
-      icon: Users,
-      title: "Mike Johnson added to Engineering team",
-      time: "1 hour ago",
-    },
-    {
-      icon: Clock,
-      title: "Daily attendance report generated",
-      time: "2 hours ago",
-    },
-  ];
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div className="dashboard-container">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "200px",
+            }}
+          >
+            <div>Loading dashboard...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard">
@@ -122,11 +202,29 @@ const Dashboard = () => {
             </p>
             <div className="welcome-stats">
               <div className="welcome-stat">
-                <div className="welcome-stat-value">95.2%</div>
+                <div className="welcome-stat-value">
+                  {dashboardData.totalEmployees > 0
+                    ? (
+                        (dashboardData.attendanceToday.present /
+                          dashboardData.totalEmployees) *
+                        100
+                      ).toFixed(1)
+                    : "0"}
+                  %
+                </div>
                 <div className="welcome-stat-label">Attendance Rate</div>
               </div>
               <div className="welcome-stat">
-                <div className="welcome-stat-value">5.8%</div>
+                <div className="welcome-stat-value">
+                  {dashboardData.totalEmployees > 0
+                    ? (
+                        (dashboardData.attendanceToday.absent /
+                          dashboardData.totalEmployees) *
+                        100
+                      ).toFixed(1)
+                    : "0"}
+                  %
+                </div>
                 <div className="welcome-stat-label">Absent Rate</div>
               </div>
             </div>
@@ -177,13 +275,25 @@ const Dashboard = () => {
             {/* Attendance Overview Pie Chart */}
             <div className="chart-card">
               <h4 className="chart-card-title">Attendance Distribution</h4>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={[
-                      { name: "Present", value: 38, fill: "#10b981" },
-                      { name: "Absent", value: 12, fill: "#ef4444" },
-                      { name: "Late", value: 0, fill: "#f59e0b" },
+                      {
+                        name: "Present",
+                        value: dashboardData.attendanceToday.present,
+                        fill: "#10b981",
+                      },
+                      {
+                        name: "Absent",
+                        value: dashboardData.attendanceToday.absent,
+                        fill: "#ef4444",
+                      },
+                      {
+                        name: "Late",
+                        value: dashboardData.attendanceToday.late,
+                        fill: "#f59e0b",
+                      },
                     ]}
                     cx="50%"
                     cy="50%"
@@ -211,13 +321,29 @@ const Dashboard = () => {
             {/* Employee Status Bar Chart */}
             <div className="chart-card">
               <h4 className="chart-card-title">Employee Status Overview</h4>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={[
-                    { name: "Total", value: 50, fill: "#3b82f6" },
-                    { name: "Present", value: 38, fill: "#10b981" },
-                    { name: "Absent", value: 12, fill: "#ef4444" },
-                    { name: "Late", value: 0, fill: "#f59e0b" },
+                    {
+                      name: "Total",
+                      value: dashboardData.totalEmployees,
+                      fill: "#3b82f6",
+                    },
+                    {
+                      name: "Present",
+                      value: dashboardData.attendanceToday.present,
+                      fill: "#10b981",
+                    },
+                    {
+                      name: "Absent",
+                      value: dashboardData.attendanceToday.absent,
+                      fill: "#ef4444",
+                    },
+                    {
+                      name: "Late",
+                      value: dashboardData.attendanceToday.late,
+                      fill: "#f59e0b",
+                    },
                   ]}
                 >
                   <XAxis dataKey="name" />
@@ -262,17 +388,51 @@ const Dashboard = () => {
             Recent Activity
           </h3>
           <div className="activity-list">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="activity-item">
+            {recentActivities.recentLeaves.slice(0, 2).map((leave, index) => (
+              <div key={`leave-${index}`} className="activity-item">
                 <div className="activity-icon">
-                  <activity.icon className="w-5 h-5" />
+                  <Calendar className="w-5 h-5" />
                 </div>
                 <div className="activity-content">
-                  <div className="activity-title">{activity.title}</div>
-                  <div className="activity-time">{activity.time}</div>
+                  <div className="activity-title">
+                    Leave request from {leave.employee?.firstName}{" "}
+                    {leave.employee?.lastName}
+                  </div>
+                  <div className="activity-time">
+                    {new Date(leave.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
             ))}
+            {recentActivities.recentEmployees
+              .slice(0, 2)
+              .map((employee, index) => (
+                <div key={`employee-${index}`} className="activity-item">
+                  <div className="activity-icon">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div className="activity-content">
+                    <div className="activity-title">
+                      {employee.firstName} {employee.lastName} joined{" "}
+                      {employee.department?.name}
+                    </div>
+                    <div className="activity-time">
+                      {new Date(employee.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            {recentActivities.recentLeaves.length === 0 &&
+              recentActivities.recentEmployees.length === 0 && (
+                <div className="activity-item">
+                  <div className="activity-content">
+                    <div className="activity-title">No recent activities</div>
+                    <div className="activity-time">
+                      Add employees or leave requests to see activity
+                    </div>
+                  </div>
+                </div>
+              )}
           </div>
         </div>
       </div>

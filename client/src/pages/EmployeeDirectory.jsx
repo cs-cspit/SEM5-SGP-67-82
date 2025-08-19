@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -15,136 +15,118 @@ import {
   Briefcase,
   Award,
   TrendingUp,
-  Eye,
   Download,
   ChevronDown,
 } from "lucide-react";
+import AddEmployeeModal from "../components/AddEmployeeModal";
+import EditEmployeeModal from "../components/EditEmployeeModal";
+import { useToast } from "../components/Toast";
 import "./EmployeeDirectory.css";
+
+const API_BASE_URL = "http://localhost:5000/api";
 
 const EmployeeDirectory = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const { showSuccess, showError, ToastContainer } = useToast();
+  const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sample employee data
-  const employees = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john.doe@company.com",
-      phone: "+1 (555) 123-4567",
-      position: "Senior Developer",
-      department: "Engineering",
-      location: "New York, NY",
-      joinDate: "2022-01-15",
-      status: "Active",
-      avatar: "/api/placeholder/40/40",
-      salary: 85000,
-      attendance: 95.2,
-    },
-    {
-      id: 2,
-      name: "Sarah Wilson",
-      email: "sarah.wilson@company.com",
-      phone: "+1 (555) 987-6543",
-      position: "Product Manager",
-      department: "Product",
-      location: "San Francisco, CA",
-      joinDate: "2021-08-22",
-      status: "Active",
-      avatar: "/api/placeholder/40/40",
-      salary: 92000,
-      attendance: 98.1,
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      email: "mike.johnson@company.com",
-      phone: "+1 (555) 456-7890",
-      position: "UX Designer",
-      department: "Design",
-      location: "Austin, TX",
-      joinDate: "2023-03-10",
-      status: "Active",
-      avatar: "/api/placeholder/40/40",
-      salary: 78000,
-      attendance: 92.7,
-    },
-    {
-      id: 4,
-      name: "Emma Davis",
-      email: "emma.davis@company.com",
-      phone: "+1 (555) 321-9876",
-      position: "HR Manager",
-      department: "Human Resources",
-      location: "Chicago, IL",
-      joinDate: "2020-11-05",
-      status: "Active",
-      avatar: "/api/placeholder/40/40",
-      salary: 88000,
-      attendance: 96.8,
-    },
-    {
-      id: 5,
-      name: "Alex Rodriguez",
-      email: "alex.rodriguez@company.com",
-      phone: "+1 (555) 654-3210",
-      position: "Marketing Specialist",
-      department: "Marketing",
-      location: "Miami, FL",
-      joinDate: "2022-09-12",
-      status: "Active",
-      avatar: "/api/placeholder/40/40",
-      salary: 72000,
-      attendance: 89.5,
-    },
-    {
-      id: 6,
-      name: "Lisa Chen",
-      email: "lisa.chen@company.com",
-      phone: "+1 (555) 789-0123",
-      position: "Data Analyst",
-      department: "Analytics",
-      location: "Seattle, WA",
-      joinDate: "2023-01-08",
-      status: "On Leave",
-      avatar: "/api/placeholder/40/40",
-      salary: 76000,
-      attendance: 94.3,
-    },
-  ];
-
-  const departments = [
-    "all",
-    "Engineering",
-    "Product",
-    "Design",
-    "Human Resources",
-    "Marketing",
-    "Analytics",
-  ];
   const statuses = ["all", "Active", "Inactive", "On Leave"];
+
+  // Fetch employees from API
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/employees`);
+      if (!response.ok) throw new Error("Failed to fetch employees");
+      const data = await response.json();
+
+      // Transform data to match frontend format
+      const transformedEmployees = data.map((emp) => ({
+        id: emp._id,
+        name: `${emp.firstName} ${emp.lastName}`,
+        email: emp.email,
+        phone: emp.phone,
+        position: emp.position,
+        department: emp.department?.name || emp.department,
+        location: emp.address || "N/A",
+        joinDate: new Date(emp.dateOfJoining).toISOString().split("T")[0],
+        status: emp.status,
+        avatar: "/api/placeholder/40/40",
+        salary: emp.basicSalary,
+        attendance: Math.random() * 100, // TODO: Calculate from actual attendance data
+      }));
+
+      setEmployees(transformedEmployees);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+      showError("Failed to fetch employees");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch departments from API
+  const fetchDepartments = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/departments`);
+      if (!response.ok) throw new Error("Failed to fetch departments");
+      const data = await response.json();
+
+      const departmentNames = ["all", ...data.map((dept) => dept.name)];
+      setDepartments(departmentNames);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      setDepartments(["all", "Engineering", "HR", "Marketing", "Finance"]);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+    fetchDepartments();
+  }, []);
+
+  // Calculate dynamic stats
+  const totalEmployees = employees.length;
+  const activeEmployees = employees.filter(
+    (emp) => emp.status === "Active"
+  ).length;
+  const uniqueDepartments = [...new Set(employees.map((emp) => emp.department))]
+    .length;
+  const avgAttendance =
+    employees.length > 0
+      ? (
+          employees.reduce((sum, emp) => sum + emp.attendance, 0) /
+          employees.length
+        ).toFixed(1)
+      : 0;
 
   const stats = [
     {
       title: "Total Employees",
-      value: "156",
+      value: totalEmployees.toString(),
       icon: Users,
       type: "total",
       change: "+12%",
       changeType: "positive",
     },
     {
-      title: "New Hires (This Month)",
-      value: "8",
+      title: "Active Employees",
+      value: activeEmployees.toString(),
       icon: UserPlus,
       type: "new",
-      change: "+2",
+      change: `${((activeEmployees / totalEmployees) * 100).toFixed(0)}%`,
       changeType: "positive",
     },
     {
       title: "Departments",
-      value: "6",
+      value: uniqueDepartments.toString(),
       icon: Briefcase,
       type: "departments",
       change: "0",
@@ -152,7 +134,7 @@ const EmployeeDirectory = () => {
     },
     {
       title: "Avg. Attendance",
-      value: "94.2%",
+      value: `${avgAttendance}%`,
       icon: Award,
       type: "attendance",
       change: "+1.5%",
@@ -182,6 +164,122 @@ const EmployeeDirectory = () => {
     day: "numeric",
   });
 
+  // Handle add employee
+  const handleAddEmployee = async (employeeData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/employees`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: employeeData.name.split(" ")[0],
+          lastName: employeeData.name.split(" ").slice(1).join(" ") || "",
+          email: employeeData.email,
+          phone: employeeData.phone,
+          position: employeeData.position,
+          department: employeeData.department,
+          address: employeeData.location,
+          dateOfJoining: employeeData.joinDate,
+          basicSalary: employeeData.salary,
+          status: employeeData.status,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to add employee");
+
+      const newEmployee = await response.json();
+      await fetchEmployees(); // Refresh the list
+      showSuccess(`Employee ${employeeData.name} has been added successfully!`);
+    } catch (error) {
+      console.error("Error adding employee:", error);
+      showError("Failed to add employee. Please try again.");
+      throw error;
+    }
+  };
+
+  // Handle delete employee
+  const handleDeleteEmployee = async (employeeId) => {
+    try {
+      const employee = employees.find((emp) => emp.id === employeeId);
+
+      const response = await fetch(`${API_BASE_URL}/employees/${employeeId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete employee");
+
+      await fetchEmployees(); // Refresh the list
+      showSuccess(`Employee ${employee?.name} has been deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      showError("Failed to delete employee. Please try again.");
+    }
+  };
+
+  // Handle edit employee
+  const handleEditEmployee = (employee) => {
+    setSelectedEmployee(employee);
+    setIsEditModalOpen(true);
+  };
+
+  // Handle update employee
+  const handleUpdateEmployee = async (updatedEmployee) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/employees/${updatedEmployee.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName: updatedEmployee.name.split(" ")[0],
+            lastName: updatedEmployee.name.split(" ").slice(1).join(" ") || "",
+            email: updatedEmployee.email,
+            phone: updatedEmployee.phone,
+            position: updatedEmployee.position,
+            department: updatedEmployee.department,
+            address: updatedEmployee.location,
+            dateOfJoining: updatedEmployee.joinDate,
+            basicSalary: updatedEmployee.salary,
+            status: updatedEmployee.status,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to update employee");
+
+      await fetchEmployees(); // Refresh the list
+      showSuccess(
+        `Employee ${updatedEmployee.name} has been updated successfully!`
+      );
+    } catch (error) {
+      console.error("Error updating employee:", error);
+      showError("Failed to update employee. Please try again.");
+      throw error;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="employee-directory">
+        <div className="employee-directory-container">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "200px",
+            }}
+          >
+            <div>Loading employees...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="employee-directory">
       <div className="employee-directory-container">
@@ -203,7 +301,10 @@ const EmployeeDirectory = () => {
                 <Download className="w-3 h-3" />
                 Export
               </button>
-              <button className="btn-primary-small">
+              <button
+                className="btn-primary-small"
+                onClick={() => setIsAddModalOpen(true)}
+              >
                 <Plus className="w-3 h-3" />
                 Add Employee
               </button>
@@ -382,22 +483,11 @@ const EmployeeDirectory = () => {
                     <td className="table-cell-compact">
                       <div className="action-buttons-compact">
                         <button
-                          className="action-btn-compact view"
-                          title="View"
-                        >
-                          <Eye className="action-icon-small" />
-                        </button>
-                        <button
                           className="action-btn-compact edit"
                           title="Edit"
+                          onClick={() => handleEditEmployee(employee)}
                         >
                           <Edit className="action-icon-small" />
-                        </button>
-                        <button
-                          className="action-btn-compact delete"
-                          title="Delete"
-                        >
-                          <Trash2 className="action-icon-small" />
                         </button>
                       </div>
                     </td>
@@ -415,6 +505,28 @@ const EmployeeDirectory = () => {
             </div>
           )}
         </div>
+
+        {/* Add Employee Modal */}
+        <AddEmployeeModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSubmit={handleAddEmployee}
+        />
+
+        {/* Edit Employee Modal */}
+        <EditEmployeeModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedEmployee(null);
+          }}
+          onUpdate={handleUpdateEmployee}
+          onDelete={handleDeleteEmployee}
+          employee={selectedEmployee}
+        />
+
+        {/* Toast Notifications */}
+        <ToastContainer />
       </div>
     </div>
   );
