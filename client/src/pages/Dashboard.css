@@ -234,8 +234,14 @@
 
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .chart-card {
@@ -243,6 +249,9 @@
   border-radius: 12px;
   padding: 20px;
   border: 1px solid rgba(59, 130, 246, 0.1);
+  height: 400px;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-card-title {
@@ -251,6 +260,12 @@
   font-weight: 600;
   margin-bottom: 16px;
   text-align: center;
+  flex-shrink: 0;
+}
+
+.chart-card .recharts-wrapper {
+  flex: 1;
+  min-height: 0;
 }
 
 /* Quick Actions */
