@@ -21,10 +21,12 @@ import {
   TrendingUp,
   Sun,
   Search,
-  Activity,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
 } from "lucide-react";
 
 import "./Dashboard.css";
@@ -35,16 +37,13 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({
     totalEmployees: 0,
     totalDepartments: 0,
-    attendanceToday: { present: 0, late: 0, absent: 0 },
+    attendanceToday: { present: 0, absent: 0 },
     pendingLeaves: 0,
     departmentStats: [],
     attendanceTrend: [],
   });
-  const [recentActivities, setRecentActivities] = useState({
-    recentLeaves: [],
-    recentEmployees: [],
-  });
   const [loading, setLoading] = useState(true);
+  const [pendingAttendance, setPendingAttendance] = useState([]);
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -59,6 +58,7 @@ const Dashboard = () => {
       const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
       if (!response.ok) throw new Error("Failed to fetch dashboard stats");
       const data = await response.json();
+      console.log("Dashboard data received:", data); // Debug log
       setDashboardData(data);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -66,29 +66,78 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch recent activities
-  const fetchRecentActivities = async () => {
+  // Fetch pending attendance requests
+  const fetchPendingAttendance = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/dashboard/activities`);
-      if (!response.ok) throw new Error("Failed to fetch recent activities");
-      const data = await response.json();
-      setRecentActivities(data);
+      console.log("Fetching pending attendance..."); // Debug log
+      const response = await fetch(`${API_BASE_URL}/attendance/pending`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Pending attendance data:", data); // Debug log
+        setPendingAttendance(data);
+      } else {
+        console.error("Failed to fetch pending attendance:", response.status);
+      }
     } catch (error) {
-      console.error("Error fetching recent activities:", error);
-      // Keep default empty values on error
+      console.error("Error fetching pending attendance:", error);
+    }
+  };
+
+  // Handle attendance approval/rejection
+  const handleAttendanceAction = async (attendanceId, action, employeeName) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/attendance/${attendanceId}/approve`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action, // 'approve' or 'reject'
+            status: action === "approve" ? "Present" : "Absent",
+          }),
+        }
+      );
+
+      if (response.ok) {
+        // Remove from pending list
+        setPendingAttendance((prev) =>
+          prev.filter((item) => item._id !== attendanceId)
+        );
+
+        // Show success message
+        alert(
+          action === "approve"
+            ? `✅ ${employeeName}'s attendance has been approved and marked as Present!`
+            : `❌ ${employeeName}'s attendance has been rejected and marked as Absent!`
+        );
+
+        // Refresh dashboard data
+        fetchDashboardStats();
+      } else {
+        alert(`❌ Failed to ${action} attendance. Please try again.`);
+      }
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+      alert(`❌ Error occurred while ${action}ing attendance.`);
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      await Promise.all([fetchDashboardStats(), fetchRecentActivities()]);
+      await Promise.all([fetchDashboardStats(), fetchPendingAttendance()]);
       setLoading(false);
     };
     fetchData();
+
+    // Poll for pending attendance every 30 seconds
+    const interval = setInterval(fetchPendingAttendance, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Transform data for charts
+  // Transform data for charts - simplified to Present/Absent only
   const stats = [
     {
       title: "Total Employees",
@@ -144,31 +193,6 @@ const Dashboard = () => {
         },
       ],
     },
-    {
-      title: "Late Arrivals",
-      value: dashboardData.attendanceToday.late.toString(),
-      icon: Clock,
-      type: "late",
-      chartData: [
-        {
-          name: "Late",
-          value: dashboardData.attendanceToday.late,
-          color: "#f59e0b",
-        },
-        {
-          name: "On Time",
-          value: dashboardData.attendanceToday.present,
-          color: "#e5e7eb",
-        },
-      ],
-    },
-  ];
-
-  const quickActions = [
-    { icon: Users, title: "Add Employee", href: "/employee-directory" },
-    { icon: Clock, title: "Mark Attendance", href: "/attendance" },
-    { icon: Calendar, title: "Leave Requests", href: "/leave-management" },
-    { icon: TrendingUp, title: "Reports", href: "/salary-report" },
   ];
 
   if (loading) {
@@ -212,15 +236,16 @@ const Dashboard = () => {
                     : "0"}
                   %
                 </div>
-                <div className="welcome-stat-label">Attendance Rate</div>
+                <div className="welcome-stat-label">Present Rate</div>
               </div>
               <div className="welcome-stat">
                 <div className="welcome-stat-value">
                   {dashboardData.totalEmployees > 0
                     ? (
-                        (dashboardData.attendanceToday.absent /
+                        100 -
+                        (dashboardData.attendanceToday.present /
                           dashboardData.totalEmployees) *
-                        100
+                          100
                       ).toFixed(1)
                     : "0"}
                   %
@@ -231,20 +256,90 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Header */}
-        <div className="dashboard-header">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="dashboard-title">Dashboard Overview</h2>
-              <p className="dashboard-subtitle">
-                Monitor your team's performance and attendance
-              </p>
-              <div className="dashboard-date">
-                <Calendar className="w-4 h-4" />
-                {currentDate}
-              </div>
+        {/* Pending Attendance Requests Section */}
+        <div className="pending-attendance-section">
+          <div className="pending-header">
+            <div className="pending-title-wrapper">
+              <AlertCircle className="pending-icon" />
+              <h3 className="pending-title">
+                Pending Attendance Requests ({pendingAttendance.length})
+              </h3>
             </div>
           </div>
+
+          {pendingAttendance.length > 0 ? (
+            <div className="pending-list">
+              {pendingAttendance.map((attendance) => (
+                <div key={attendance._id} className="pending-item">
+                  <div className="employee-info">
+                    <div className="employee-avatar">
+                      {attendance.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="employee-details">
+                      <h4 className="employee-name">{attendance.name}</h4>
+                      <p className="employee-meta">
+                        {attendance.employeeId} • {attendance.department}
+                      </p>
+                      <div className="attendance-meta">
+                        <Clock className="meta-icon" />
+                        <span>{attendance.checkIn}</span>
+                        <span className="separator">•</span>
+                        <span className="method-badge">
+                          {attendance.method}
+                        </span>
+                        {attendance.location && (
+                          <>
+                            <span className="separator">•</span>
+                            <span className="location-info">
+                              📍 Location verified
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="action-buttons">
+                    <button
+                      className="approve-btn"
+                      onClick={() =>
+                        handleAttendanceAction(
+                          attendance._id,
+                          "approve",
+                          attendance.name
+                        )
+                      }
+                      title="Mark Present"
+                    >
+                      <CheckCircle className="btn-icon" />
+                      Present
+                    </button>
+                    <button
+                      className="reject-btn"
+                      onClick={() =>
+                        handleAttendanceAction(
+                          attendance._id,
+                          "reject",
+                          attendance.name
+                        )
+                      }
+                      title="Mark Absent"
+                    >
+                      <XCircle className="btn-icon" />
+                      Absent
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-pending-requests">
+              <div className="no-pending-icon">
+                <CheckCircle className="check-icon" />
+              </div>
+              <h4>All Clear!</h4>
+            </div>
+          )}
         </div>
 
         {/* Stats Grid */}
@@ -288,11 +383,6 @@ const Dashboard = () => {
                         name: "Absent",
                         value: dashboardData.attendanceToday.absent,
                         fill: "#ef4444",
-                      },
-                      {
-                        name: "Late",
-                        value: dashboardData.attendanceToday.late,
-                        fill: "#f59e0b",
                       },
                     ]}
                     cx="50%"
@@ -339,11 +429,6 @@ const Dashboard = () => {
                       value: dashboardData.attendanceToday.absent,
                       fill: "#ef4444",
                     },
-                    {
-                      name: "Late",
-                      value: dashboardData.attendanceToday.late,
-                      fill: "#f59e0b",
-                    },
                   ]}
                 >
                   <XAxis dataKey="name" />
@@ -362,77 +447,6 @@ const Dashboard = () => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="quick-actions">
-          <h3>
-            <Activity className="w-5 h-5 text-blue-600" />
-            Quick Actions
-          </h3>
-          <div className="actions-grid">
-            {quickActions.map((action, index) => (
-              <a key={index} href={action.href} className="action-button">
-                <action.icon className="action-icon" />
-                {action.title}
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="recent-activity">
-          <h3>
-            <Clock className="w-5 h-5 text-blue-600" />
-            Recent Activity
-          </h3>
-          <div className="activity-list">
-            {recentActivities.recentLeaves.slice(0, 2).map((leave, index) => (
-              <div key={`leave-${index}`} className="activity-item">
-                <div className="activity-icon">
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <div className="activity-content">
-                  <div className="activity-title">
-                    Leave request from {leave.employee?.firstName}{" "}
-                    {leave.employee?.lastName}
-                  </div>
-                  <div className="activity-time">
-                    {new Date(leave.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-            ))}
-            {recentActivities.recentEmployees
-              .slice(0, 2)
-              .map((employee, index) => (
-                <div key={`employee-${index}`} className="activity-item">
-                  <div className="activity-icon">
-                    <Users className="w-5 h-5" />
-                  </div>
-                  <div className="activity-content">
-                    <div className="activity-title">
-                      {employee.firstName} {employee.lastName} joined{" "}
-                      {employee.department?.name}
-                    </div>
-                    <div className="activity-time">
-                      {new Date(employee.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            {recentActivities.recentLeaves.length === 0 &&
-              recentActivities.recentEmployees.length === 0 && (
-                <div className="activity-item">
-                  <div className="activity-content">
-                    <div className="activity-title">No recent activities</div>
-                    <div className="activity-time">
-                      Add employees or leave requests to see activity
-                    </div>
-                  </div>
-                </div>
-              )}
           </div>
         </div>
       </div>

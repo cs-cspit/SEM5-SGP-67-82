@@ -1,0 +1,14 @@
+{
+  "name": "employee-portal",
+  "version": "1.0.0",
+  "description": "Employee Attendance Portal",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 3000",
+    "dev": "live-server --port=3000"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.3",
+    "html5-qrcode": "^2.3.8"
+  }
+}

@@ -26,10 +26,61 @@ export const getEmployeeById = async (req, res) => {
 // Create new employee
 export const createEmployee = async (req, res) => {
   try {
-    const employee = new Employee(req.body);
+    console.log('Received employee data:', JSON.stringify(req.body, null, 2));
+    
+    // Validate required fields
+    const requiredFields = ['name', 'email', 'phone', 'position', 'department'];
+    for (const field of requiredFields) {
+      if (!req.body[field]) {
+        return res.status(400).json({ 
+          message: `${field} is required`,
+          field: field 
+        });
+      }
+    }
+
+    // Check if email already exists
+    const existingEmployee = await Employee.findOne({ email: req.body.email.toLowerCase() });
+    if (existingEmployee) {
+      return res.status(409).json({ 
+        message: 'Employee with this email already exists',
+        field: 'email'
+      });
+    }
+
+    const employee = new Employee({
+      ...req.body,
+      email: req.body.email.toLowerCase(),
+      status: req.body.status || 'Active'
+    });
+    
     const savedEmployee = await employee.save();
-    res.status(201).json(savedEmployee);
+    console.log('Employee saved successfully:', savedEmployee._id);
+    
+    // Populate department information before sending response
+    const populatedEmployee = await Employee.findById(savedEmployee._id).populate('department');
+    
+    res.status(201).json(populatedEmployee || savedEmployee);
   } catch (error) {
+    console.error('Error creating employee:', error.message);
+    console.error('Error details:', error);
+    
+    if (error.name === 'ValidationError') {
+      const errorMessages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({ 
+        message: 'Validation failed', 
+        errors: errorMessages 
+      });
+    }
+    
+    if (error.code === 11000) {
+      const duplicateField = Object.keys(error.keyValue)[0];
+      return res.status(409).json({ 
+        message: `Employee with this ${duplicateField} already exists`, 
+        field: duplicateField 
+      });
+    }
+    
     res.status(400).json({ message: error.message });
   }
 };

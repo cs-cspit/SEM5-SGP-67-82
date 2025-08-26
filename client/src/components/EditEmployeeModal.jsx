@@ -14,7 +14,6 @@ import {
   Edit3,
   Trash2,
 } from "lucide-react";
-import { useToast } from "./Toast";
 import "./EditEmployeeModal.css";
 
 const EditEmployeeModal = ({
@@ -24,7 +23,6 @@ const EditEmployeeModal = ({
   onDelete,
   employee,
 }) => {
-  const { showSuccess, showError, showWarning, ToastContainer } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -142,11 +140,14 @@ const EditEmployeeModal = ({
   };
 
   const handleDelete = () => {
-    showWarning(
-      `Deleting employee ${employee?.name}. This action cannot be undone.`
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete employee ${employee?.name}? This action cannot be undone.`
     );
-    onDelete(employee.id);
-    handleClose();
+
+    if (confirmDelete) {
+      onDelete(employee.id);
+      handleClose();
+    }
   };
 
   const handleClose = () => {
@@ -330,9 +331,6 @@ const EditEmployeeModal = ({
           </div>
         </form>
       </div>
-
-      {/* Toast Notifications */}
-      <ToastContainer />
     </div>
   );
 };

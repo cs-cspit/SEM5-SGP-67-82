@@ -13,11 +13,9 @@ import {
   Save,
   UserPlus,
 } from "lucide-react";
-import { useToast } from "./Toast";
 import "./AddEmployeeModal.css";
 
 const AddEmployeeModal = ({ isOpen, onClose, onSubmit }) => {
-  const { showSuccess, showError, showWarning, ToastContainer } = useToast();
   const [formData, setFormData] = useState({
     // Basic Information
     name: "",
@@ -149,8 +147,12 @@ const AddEmployeeModal = ({ isOpen, onClose, onSubmit }) => {
     );
 
     if (hasData) {
-      showWarning("All entered data will be lost if you cancel.");
-      resetFormAndClose();
+      const confirmCancel = window.confirm(
+        "All entered data will be lost if you cancel. Are you sure?"
+      );
+      if (confirmCancel) {
+        resetFormAndClose();
+      }
     } else {
       resetFormAndClose();
     }
@@ -407,9 +409,6 @@ const AddEmployeeModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
         </form>
       </div>
-
-      {/* Toast Notifications */}
-      <ToastContainer />
     </div>
   );
 };

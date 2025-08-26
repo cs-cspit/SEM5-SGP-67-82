@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Attendance Portal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Employee Attendance Portal</h1>
+            <p>Mark your attendance using location verification</p>
+        </div>
+
+        <div class="content">
+            <!-- Login Section -->
+            <div id="loginSection" class="login-section">
+                <div class="form-group">
+                    <label for="employeeId">Employee ID:</label>
+                    <input type="text" id="employeeId" placeholder="Enter your Employee ID (e.g., EMP001)" autocomplete="off">
+                </div>
+                <button class="btn" onclick="login()">Login</button>
+                <div id="loginError" class="status-message error hidden"></div>
+            </div>
+
+            <!-- Attendance Section -->
+            <div id="attendanceSection" style="display: none;">
+                <!-- Today's Attendance Status -->
+                <div id="attendanceStatus" class="status-card">
+                    <h3>Today's Attendance Status</h3>
+                    <div id="statusDisplay">
+                        <p>Loading status...</p>
+                    </div>
+                </div>
+
+                <!-- Location Verification -->
+                <div class="location-section">
+                    <h3>Location Verification</h3>
+                    <div id="locationStatus" class="status-message loading">Getting your location...</div>
+                    <div id="locationInfo" class="location-info hidden">
+                        <p id="coordinates"></p>
+                    </div>
+                </div>
+
+                <!-- Check-in/Check-out Buttons -->
+                <div id="attendanceActions" class="attendance-actions hidden">
+                    <button id="checkInBtn" class="btn btn-check-in" onclick="checkIn()">
+                        <span class="btn-icon">⏰</span>
+                        Check In
+                    </button>
+                    <button id="checkOutBtn" class="btn btn-check-out" onclick="checkOut()">
+                        <span class="btn-icon">🚪</span>
+                        Check Out
+                    </button>
+                </div>
+
+                <!-- Attendance Result -->
+                <div id="attendanceResult" class="status-message hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

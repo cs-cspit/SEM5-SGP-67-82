@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import AddEmployeeModal from "../components/AddEmployeeModal";
 import EditEmployeeModal from "../components/EditEmployeeModal";
-import { useToast } from "../components/Toast";
 import "./EmployeeDirectory.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
@@ -32,12 +31,61 @@ const EmployeeDirectory = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const { showSuccess, showError, ToastContainer } = useToast();
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const statuses = ["all", "Active", "Inactive", "On Leave"];
+
+  // Calculate attendance percentage for an employee
+  const calculateAttendancePercentage = async (employeeId) => {
+    try {
+      // Get attendance data for the last 30 days
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+
+      const response = await fetch(
+        `${API_BASE_URL}/attendance?employeeId=${employeeId}&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`
+      );
+
+      if (!response.ok) {
+        console.warn(`Failed to fetch attendance for employee ${employeeId}`);
+        return 0;
+      }
+
+      const attendanceData = await response.json();
+
+      // Calculate working days in the last 30 days (excluding weekends)
+      let workingDays = 0;
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        const dayOfWeek = currentDate.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          // Exclude Sunday (0) and Saturday (6)
+          workingDays++;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // Count approved attendance days
+      const presentDays = attendanceData.filter(
+        (record) =>
+          record.approvalStatus === "approved" && record.status === "Present"
+      ).length;
+
+      // Calculate percentage
+      const percentage =
+        workingDays > 0 ? Math.round((presentDays / workingDays) * 100) : 0;
+      return Math.min(percentage, 100); // Cap at 100%
+    } catch (error) {
+      console.warn(
+        `Error calculating attendance for employee ${employeeId}:`,
+        error
+      );
+      return 0;
+    }
+  };
 
   // Fetch employees from API
   const fetchEmployees = async () => {
@@ -47,26 +95,35 @@ const EmployeeDirectory = () => {
       if (!response.ok) throw new Error("Failed to fetch employees");
       const data = await response.json();
 
-      // Transform data to match frontend format
-      const transformedEmployees = data.map((emp) => ({
-        id: emp._id,
-        name: `${emp.firstName} ${emp.lastName}`,
-        email: emp.email,
-        phone: emp.phone,
-        position: emp.position,
-        department: emp.department?.name || emp.department,
-        location: emp.address || "N/A",
-        joinDate: new Date(emp.dateOfJoining).toISOString().split("T")[0],
-        status: emp.status,
-        avatar: "/api/placeholder/40/40",
-        salary: emp.basicSalary,
-        attendance: Math.random() * 100, // TODO: Calculate from actual attendance data
-      }));
+      // Transform data to match frontend format and fetch attendance
+      const transformedEmployees = await Promise.all(
+        data.map(async (emp, index) => {
+          const attendancePercentage = await calculateAttendancePercentage(
+            emp._id
+          );
 
+          return {
+            id: emp._id,
+            employeeId: emp.employeeId, // Keep the original employeeId
+            formattedId: `emp${(index + 1).toString().padStart(3, "0")}`, // Add formatted ID
+            name: emp.name,
+            email: emp.email,
+            phone: emp.phone,
+            position: emp.position,
+            department: emp.department?.name || emp.department,
+            location: emp.address || "N/A",
+            joinDate: new Date(emp.joinDate).toISOString().split("T")[0],
+            status: emp.status,
+            avatar: "/api/placeholder/40/40",
+            salary: emp.salary,
+            attendance: attendancePercentage,
+          };
+        })
+      );
       setEmployees(transformedEmployees);
     } catch (error) {
       console.error("Error fetching employees:", error);
-      showError("Failed to fetch employees");
+      console.error("Failed to fetch employees");
     } finally {
       setLoading(false);
     }
@@ -101,10 +158,10 @@ const EmployeeDirectory = () => {
     .length;
   const avgAttendance =
     employees.length > 0
-      ? (
+      ? Math.round(
           employees.reduce((sum, emp) => sum + emp.attendance, 0) /
-          employees.length
-        ).toFixed(1)
+            employees.length
+        )
       : 0;
 
   const stats = [
@@ -167,33 +224,41 @@ const EmployeeDirectory = () => {
   // Handle add employee
   const handleAddEmployee = async (employeeData) => {
     try {
+      console.log("Sending employee data:", employeeData);
       const response = await fetch(`${API_BASE_URL}/employees`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          firstName: employeeData.name.split(" ")[0],
-          lastName: employeeData.name.split(" ").slice(1).join(" ") || "",
+          name: employeeData.name,
           email: employeeData.email,
           phone: employeeData.phone,
           position: employeeData.position,
           department: employeeData.department,
-          address: employeeData.location,
-          dateOfJoining: employeeData.joinDate,
-          basicSalary: employeeData.salary,
+          address: employeeData.address,
+          joinDate: employeeData.joinDate,
+          salary: employeeData.salary,
           status: employeeData.status,
+          dateOfBirth: employeeData.dateOfBirth,
+          gender: employeeData.gender,
+          maritalStatus: employeeData.maritalStatus,
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to add employee");
+      console.log("Response status:", response.status);
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Server error:", errorData);
+        throw new Error(`Failed to add employee: ${response.status}`);
+      }
 
       const newEmployee = await response.json();
       await fetchEmployees(); // Refresh the list
-      showSuccess(`Employee ${employeeData.name} has been added successfully!`);
+      alert(`Employee ${employeeData.name} has been added successfully!`);
     } catch (error) {
       console.error("Error adding employee:", error);
-      showError("Failed to add employee. Please try again.");
+      console.error("Failed to add employee. Please try again.");
       throw error;
     }
   };
@@ -210,10 +275,10 @@ const EmployeeDirectory = () => {
       if (!response.ok) throw new Error("Failed to delete employee");
 
       await fetchEmployees(); // Refresh the list
-      showSuccess(`Employee ${employee?.name} has been deleted successfully.`);
+      alert(`Employee ${employee?.name} has been deleted successfully.`);
     } catch (error) {
       console.error("Error deleting employee:", error);
-      showError("Failed to delete employee. Please try again.");
+      console.error("Failed to delete employee. Please try again.");
     }
   };
 
@@ -234,15 +299,14 @@ const EmployeeDirectory = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            firstName: updatedEmployee.name.split(" ")[0],
-            lastName: updatedEmployee.name.split(" ").slice(1).join(" ") || "",
+            name: updatedEmployee.name,
             email: updatedEmployee.email,
             phone: updatedEmployee.phone,
             position: updatedEmployee.position,
             department: updatedEmployee.department,
             address: updatedEmployee.location,
-            dateOfJoining: updatedEmployee.joinDate,
-            basicSalary: updatedEmployee.salary,
+            joinDate: updatedEmployee.joinDate,
+            salary: updatedEmployee.salary,
             status: updatedEmployee.status,
           }),
         }
@@ -251,12 +315,10 @@ const EmployeeDirectory = () => {
       if (!response.ok) throw new Error("Failed to update employee");
 
       await fetchEmployees(); // Refresh the list
-      showSuccess(
-        `Employee ${updatedEmployee.name} has been updated successfully!`
-      );
+      alert(`Employee ${updatedEmployee.name} has been updated successfully!`);
     } catch (error) {
       console.error("Error updating employee:", error);
-      showError("Failed to update employee. Please try again.");
+      console.error("Failed to update employee. Please try again.");
       throw error;
     }
   };
@@ -404,6 +466,7 @@ const EmployeeDirectory = () => {
                 <tr>
                   <th className="table-header-cell-compact">Employee</th>
                   <th className="table-header-cell-compact">Position</th>
+                  <th className="table-header-cell-compact">Contact</th>
                   <th className="table-header-cell-compact">Department</th>
                   <th className="table-header-cell-compact">Status</th>
                   <th className="table-header-cell-compact">Attendance</th>
@@ -420,7 +483,7 @@ const EmployeeDirectory = () => {
                             {employee.name}
                           </h4>
                           <p className="employee-id-compact">
-                            EMP{employee.id.toString().padStart(3, "0")}
+                            {employee.formattedId}
                           </p>
                         </div>
                       </div>
@@ -434,6 +497,23 @@ const EmployeeDirectory = () => {
                         <span className="salary-info-compact">
                           ${employee.salary.toLocaleString()}
                         </span>
+                      </div>
+                    </td>
+
+                    <td className="table-cell-compact">
+                      <div className="contact-info-compact">
+                        <div className="contact-item">
+                          <Mail className="contact-icon" />
+                          <span className="contact-value">
+                            {employee.email}
+                          </span>
+                        </div>
+                        <div className="contact-item">
+                          <Phone className="contact-icon" />
+                          <span className="contact-value">
+                            {employee.phone}
+                          </span>
+                        </div>
                       </div>
                     </td>
 
@@ -461,7 +541,7 @@ const EmployeeDirectory = () => {
                     <td className="table-cell-compact">
                       <div className="attendance-info-compact">
                         <div className="attendance-percentage-compact">
-                          {employee.attendance}%
+                          {Math.round(employee.attendance)}%
                         </div>
                         <div
                           className={`attendance-bar-compact ${
@@ -524,9 +604,6 @@ const EmployeeDirectory = () => {
           onDelete={handleDeleteEmployee}
           employee={selectedEmployee}
         />
-
-        {/* Toast Notifications */}
-        <ToastContainer />
       </div>
     </div>
   );
