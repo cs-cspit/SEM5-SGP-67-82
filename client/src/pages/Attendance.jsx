@@ -40,7 +40,7 @@ const Attendance = () => {
   const [error, setError] = useState(null);
   const [pendingAttendance, setPendingAttendance] = useState([]);
 
-  const statuses = ["all", "Present", "Absent", "Half Day", "On Leave"];
+  const statuses = ["all", "Present", "Absent", "On Leave"];
 
   // Stats for dashboard
   const stats = [
@@ -55,12 +55,6 @@ const Attendance = () => {
       value: attendanceData.filter((emp) => emp.status === "Absent").length,
       icon: XCircle,
       type: "absent",
-    },
-    {
-      title: "Half Day",
-      value: attendanceData.filter((emp) => emp.status === "Half Day").length,
-      icon: Clock,
-      type: "halfday",
     },
     {
       title: "On Leave",
@@ -81,34 +75,81 @@ const Attendance = () => {
         params.append("date", selectedDate);
       }
 
-      const response = await fetch(`${API_BASE_URL}/attendance?${params}`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Fetch all employees first
+      const employeesResponse = await fetch(`${API_BASE_URL}/employees`);
+      if (!employeesResponse.ok) {
+        throw new Error(`HTTP error! status: ${employeesResponse.status}`);
       }
 
-      const data = await response.json();
+      const employees = await employeesResponse.json();
 
-      // Transform the data to match frontend format
-      const transformedData = data.map((record) => ({
-        id: record._id,
-        employeeId: record.employeeId,
-        name: record.name,
-        department: record.department,
-        position: record.position,
-        hourlyRate: record.hourlyRate || 0,
-        checkIn: record.checkIn || "N/A",
-        checkOut: record.checkOut || "N/A",
-        totalHours: record.totalHours || 0,
-        breakTime: record.breakTime || 1,
-        workingHours: record.workingHours || 0,
-        dailySalary: record.dailySalary || 0,
-        status: record.status,
-        overtime: record.overtime || 0,
-        overtimePay: record.overtimePay || 0,
-        method: record.method || "manual",
-        date: record.date,
-      }));
+      // Then fetch attendance data
+      const attendanceResponse = await fetch(
+        `${API_BASE_URL}/attendance?${params}`
+      );
+
+      if (!attendanceResponse.ok) {
+        throw new Error(`HTTP error! status: ${attendanceResponse.status}`);
+      }
+
+      const attendanceData = await attendanceResponse.json();
+
+      // Create a map of employees with attendance
+      const attendanceMap = new Map();
+      attendanceData.forEach((record) => {
+        attendanceMap.set(record.employee, record);
+      });
+
+      // Combine employee and attendance data
+      const transformedData = employees.map((employee) => {
+        const attendanceRecord = attendanceMap.get(employee._id);
+
+        if (attendanceRecord) {
+          // Employee has attendance record
+          return {
+            id: attendanceRecord._id,
+            employeeId: attendanceRecord.employeeId || employee.employeeId,
+            name: attendanceRecord.name || employee.name,
+            department: attendanceRecord.department || employee.department,
+            position: attendanceRecord.position || employee.position,
+            hourlyRate:
+              attendanceRecord.hourlyRate || employee.hourlySalary || 0,
+            checkIn: attendanceRecord.checkIn || "N/A",
+            checkOut: attendanceRecord.checkOut || "N/A",
+            totalHours: attendanceRecord.totalHours || 0,
+            breakTime: attendanceRecord.breakTime || 1,
+            workingHours: attendanceRecord.workingHours || 0,
+            dailySalary: attendanceRecord.dailySalary || 0,
+            status: attendanceRecord.status,
+            overtime: attendanceRecord.overtime || 0,
+            overtimePay: attendanceRecord.overtimePay || 0,
+            method: attendanceRecord.method || "manual",
+            date: attendanceRecord.date,
+          };
+        } else {
+          // Employee doesn't have attendance record - show as absent
+          return {
+            id: `no-attendance-${employee._id}`,
+            employeeId: employee.employeeId,
+            name: employee.name,
+            department: employee.department,
+            position: employee.position,
+            hourlyRate: employee.hourlySalary || 0,
+            checkIn: "N/A",
+            checkOut: "N/A",
+            totalHours: 0,
+            breakTime: 0,
+            workingHours: 0,
+            dailySalary: 0,
+            status: "Absent",
+            overtime: 0,
+            overtimePay: 0,
+            method: "auto",
+            date: new Date(selectedDate).toISOString(),
+            notMarked: true, // Flag to indicate this is an auto-generated entry
+          };
+        }
+      });
 
       setAttendanceData(transformedData);
 
@@ -445,7 +486,7 @@ const Attendance = () => {
                             <div className="rate-item">
                               <span className="rate-label">Rate:</span>
                               <span className="rate-value">
-                                ${employee.hourlyRate}/hr
+                                ₹{employee.hourlyRate}/hr
                               </span>
                             </div>
                             <div className="rate-item">
@@ -468,15 +509,15 @@ const Attendance = () => {
                         <td className="table-cell-compact">
                           <div className="salary-info">
                             <div className="daily-salary">
-                              ${employee.dailySalary.toFixed(2)}
+                              ₹{employee.dailySalary.toFixed(2)}
                             </div>
                             {employee.overtimePay > 0 && (
                               <div className="overtime-pay">
-                                +${employee.overtimePay.toFixed(2)} OT
+                                +₹{employee.overtimePay.toFixed(2)} OT
                               </div>
                             )}
                             <div className="total-salary">
-                              Total: $
+                              Total: ₹
                               {(
                                 employee.dailySalary + employee.overtimePay
                               ).toFixed(2)}

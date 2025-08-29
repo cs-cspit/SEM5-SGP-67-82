@@ -7,7 +7,7 @@ import {
   MapPin,
   Calendar,
   Briefcase,
-  DollarSign,
+  IndianRupee,
   Users,
   AlertCircle,
   Save,
@@ -29,7 +29,7 @@ const EditEmployeeModal = ({
     phone: "",
     position: "",
     department: "",
-    salary: "",
+    hourlySalary: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -44,7 +44,7 @@ const EditEmployeeModal = ({
         phone: employee.phone || "",
         position: employee.position || "",
         department: employee.department || "",
-        salary: employee.salary || "",
+        hourlySalary: employee.hourlySalary || "",
       });
     }
   }, [employee]);
@@ -96,6 +96,11 @@ const EditEmployeeModal = ({
     if (!formData.phone.trim()) newErrors.phone = "Phone is required";
     if (!formData.position.trim()) newErrors.position = "Position is required";
     if (!formData.department) newErrors.department = "Department is required";
+    if (!formData.hourlySalary.toString().trim()) {
+      newErrors.hourlySalary = "Hourly salary is required";
+    } else if (parseFloat(formData.hourlySalary) <= 0) {
+      newErrors.hourlySalary = "Hourly salary must be greater than 0";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -117,7 +122,7 @@ const EditEmployeeModal = ({
         phone: formData.phone.trim(),
         position: formData.position.trim(),
         department: formData.department,
-        salary: parseFloat(formData.salary) || 0,
+        hourlySalary: parseFloat(formData.hourlySalary),
         // Preserve existing data that shouldn't be edited
         joinDate: employee.joinDate,
         dateOfBirth: employee.dateOfBirth || null,
@@ -266,20 +271,24 @@ const EditEmployeeModal = ({
               </div>
 
               <div className="form-group">
-                <label htmlFor="salary">Salary</label>
+                <label htmlFor="hourlySalary">Hourly Salary *</label>
                 <div className="input-with-icon">
-                  <DollarSign className="input-icon" />
+                  <IndianRupee className="input-icon" />
                   <input
                     type="number"
-                    id="salary"
-                    name="salary"
-                    value={formData.salary}
+                    id="hourlySalary"
+                    name="hourlySalary"
+                    value={formData.hourlySalary}
                     onChange={handleInputChange}
-                    placeholder="Enter salary amount"
+                    className={errors.hourlySalary ? "error" : ""}
+                    placeholder="Enter hourly salary rate"
                     min="0"
                     step="0.01"
                   />
                 </div>
+                {errors.hourlySalary && (
+                  <span className="error-message">{errors.hourlySalary}</span>
+                )}
               </div>
             </div>
           </div>

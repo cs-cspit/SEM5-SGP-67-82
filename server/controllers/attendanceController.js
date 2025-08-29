@@ -107,13 +107,13 @@ export const getAttendance = async (req, res) => {
 
     // Get attendance records with populated employee data
     const attendance = await Attendance.find(filter)
-      .populate('employee', 'name employeeId department position hourlyRate')
+      .populate('employee', 'name employeeId department position hourlySalary')
       .sort({ date: -1 });
 
     // Enhanced data formatting for frontend consumption
     const enhancedAttendance = attendance.map(record => {
       const employee = record.employee;
-      const hourlyRate = employee?.hourlyRate || 15;
+      const hourlyRate = employee?.hourlySalary || 15;
       
       return {
         _id: record._id,
@@ -309,7 +309,7 @@ export const approveAttendance = async (req, res) => {
         attendance.totalHours = workingHours;
 
         // Calculate salary based on working hours
-        const hourlyRate = employee.hourlyRate || 15; // Default rate if not set
+        const hourlyRate = employee.hourlySalary || 15; // Default rate if not set
         const regularHours = Math.min(workingHours, 8); // Regular hours (up to 8)
         const overtimeHours = Math.max(0, workingHours - 8); // Overtime hours
         
@@ -489,7 +489,7 @@ export const checkOut = async (req, res) => {
     attendance.workingHours = workingHours;
 
     // Calculate salary based on working hours
-    const hourlyRate = employee.hourlyRate || 15; // Default rate if not set
+    const hourlyRate = employee.hourlySalary || 15; // Default rate if not set
     const regularHours = Math.min(workingHours, 8); // Regular hours (up to 8)
     const overtimeHours = Math.max(0, workingHours - 8); // Overtime hours
     
@@ -618,7 +618,7 @@ export const markAbsentEmployees = async (req, res) => {
       overtimePay: 0,
       totalPay: 0,
       dailySalary: 0,
-      hourlyRate: employee.hourlyRate || 15
+      hourlyRate: employee.hourlySalary || 15
     }));
 
     // Insert absent records if any
@@ -677,13 +677,13 @@ export const getEnhancedAttendance = async (req, res) => {
 
     // Get attendance records with populated employee data
     const attendance = await Attendance.find(filter)
-      .populate('employee', 'name employeeId department position hourlyRate')
+      .populate('employee', 'name employeeId department position hourlySalary')
       .sort({ date: -1 });
 
     // Enhanced data formatting for frontend consumption
     const enhancedAttendance = attendance.map(record => {
       const employee = record.employee;
-      const hourlyRate = employee?.hourlyRate || record.hourlyRate || 15;
+      const hourlyRate = employee?.hourlySalary || record.hourlyRate || 15;
       
       return {
         _id: record._id,

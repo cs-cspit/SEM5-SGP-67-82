@@ -241,7 +241,7 @@ function updateAttendanceDisplay() {
             </div>
             ${totalPay > 0 ? `
             <div class="working-hours">
-                <strong>Today's Earnings: $${totalPay}</strong>
+                <strong>Today's Earnings: ₹${totalPay}</strong>
             </div>
             ` : ''}
         `;

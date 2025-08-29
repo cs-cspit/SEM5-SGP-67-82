@@ -4,7 +4,7 @@ import {
   Clock,
   FileText,
   Users,
-  DollarSign,
+  IndianRupee,
   LogOut,
   Building2,
 } from "lucide-react";
@@ -18,15 +18,14 @@ const Sidebar = () => {
     { icon: Users, name: "Employee Directory", href: "/employee-directory" },
     { icon: Clock, name: "Attendance", href: "/attendance" },
     { icon: FileText, name: "Leave Management", href: "/leave-management" },
-    { icon: DollarSign, name: "Salary Report", href: "/salary-report" },
+    { icon: IndianRupee, name: "Salary Report", href: "/salary-report" },
   ];
 
   const isActive = (href) => location.pathname === href;
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-header">
-      </div>
+      <div className="sidebar-header"></div>
 
       <nav className="sidebar-nav">
         {sidebarItems.map((item, index) => (
