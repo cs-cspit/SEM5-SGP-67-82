@@ -266,7 +266,17 @@ const Attendance = () => {
       fetchPendingAttendance();
     }, 5000); // 5000ms = 5 seconds
     return () => clearInterval(intervalId);
-  }, [selectedDate]); // Filter attendance data
+  }, [selectedDate]);
+
+  // Page refresh: refresh entire page every 10 minutes
+  useEffect(() => {
+    const pageRefreshId = setInterval(() => {
+      console.log("Auto-refreshing attendance page...");
+      window.location.reload();
+    }, 600000); // 600000ms = 10 minutes
+
+    return () => clearInterval(pageRefreshId);
+  }, []); // Empty dependency array means this runs once on mount // Filter attendance data
   const filteredAttendance = attendanceData.filter((employee) => {
     const matchesSearch =
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

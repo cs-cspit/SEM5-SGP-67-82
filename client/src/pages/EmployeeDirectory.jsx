@@ -170,32 +170,24 @@ const EmployeeDirectory = () => {
       value: totalEmployees.toString(),
       icon: Users,
       type: "total",
-      change: "+12%",
-      changeType: "positive",
     },
     {
       title: "Active Employees",
       value: activeEmployees.toString(),
       icon: UserPlus,
       type: "new",
-      change: `${((activeEmployees / totalEmployees) * 100).toFixed(0)}%`,
-      changeType: "positive",
     },
     {
       title: "Departments",
       value: uniqueDepartments.toString(),
       icon: Briefcase,
       type: "departments",
-      change: "0",
-      changeType: "neutral",
     },
     {
       title: "Avg. Attendance",
       value: `${avgAttendance}%`,
       icon: Award,
       type: "attendance",
-      change: "+1.5%",
-      changeType: "positive",
     },
   ];
 
@@ -385,10 +377,6 @@ const EmployeeDirectory = () => {
                     <h3>{stat.title}</h3>
                   </div>
                   <p className="stat-value">{stat.value}</p>
-                  <div className={`stat-change ${stat.changeType}`}>
-                    <TrendingUp className="w-3 h-3" />
-                    {stat.change}
-                  </div>
                 </div>
                 <div className="stat-icon">
                   <stat.icon className="w-5 h-5" />

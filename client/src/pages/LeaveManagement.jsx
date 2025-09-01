@@ -164,16 +164,12 @@ const LeaveManagement = () => {
         .length.toString(),
       icon: CheckCircle,
       type: "approved",
-      change: "+12%",
-      changeType: "positive",
     },
     {
       title: "Total Applications",
       value: leaveApplications.length.toString(),
       icon: FileText,
       type: "total",
-      change: "+8%",
-      changeType: "positive",
     },
   ];
 
