@@ -35,7 +35,7 @@ const EmployeeDirectory = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const statuses = ["all", "Active", "Inactive", "On Leave"];
+  const statuses = ["all", "Active", "On Leave"];
 
   // Calculate attendance percentage for an employee
   const calculateAttendancePercentage = async (employeeId) => {
@@ -115,7 +115,7 @@ const EmployeeDirectory = () => {
             joinDate: new Date(emp.joinDate).toISOString().split("T")[0],
             status: emp.status,
             avatar: "/api/placeholder/40/40",
-            salary: emp.salary,
+            salary: emp.hourlySalary,
             attendance: attendancePercentage,
           };
         })
@@ -238,7 +238,7 @@ const EmployeeDirectory = () => {
           department: employeeData.department,
           address: employeeData.address,
           joinDate: employeeData.joinDate,
-          salary: employeeData.salary,
+          hourlySalary: employeeData.hourlySalary,
           status: employeeData.status,
           dateOfBirth: employeeData.dateOfBirth,
           gender: employeeData.gender,
@@ -306,7 +306,7 @@ const EmployeeDirectory = () => {
             department: updatedEmployee.department,
             address: updatedEmployee.location,
             joinDate: updatedEmployee.joinDate,
-            salary: updatedEmployee.salary,
+            hourlySalary: updatedEmployee.hourlySalary,
             status: updatedEmployee.status,
           }),
         }
@@ -495,7 +495,7 @@ const EmployeeDirectory = () => {
                           {employee.position}
                         </span>
                         <span className="salary-info-compact">
-                          ${employee.salary.toLocaleString()}
+                          ₹{employee.salary.toLocaleString()}/hr
                         </span>
                       </div>
                     </td>

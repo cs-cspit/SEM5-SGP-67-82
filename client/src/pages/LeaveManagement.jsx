@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -18,229 +18,116 @@ import {
   Users,
   CalendarDays,
   Timer,
-  BarChart3,
+  RefreshCw,
 } from "lucide-react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from "recharts";
 import "./LeaveManagement.css";
+
+const API_BASE_URL = "http://localhost:5000/api";
 
 const LeaveManagement = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [searchTerm, setSearchTerm] = useState("");
+  const [leaveApplications, setLeaveApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample leave applications data
-  const leaveApplications = [
-    {
-      id: 1,
-      employeeId: "EMP001",
-      employeeName: "John Doe",
-      department: "Engineering",
-      position: "Senior Developer",
-      leaveType: "Sick Leave",
-      startDate: "2025-08-01",
-      endDate: "2025-08-03",
-      days: 3,
-      reason: "Fever and flu symptoms",
-      appliedDate: "2025-07-25",
-      status: "Pending",
-      priority: "High",
-      attachments: 1,
-    },
-    {
-      id: 2,
-      employeeId: "EMP002",
-      employeeName: "Sarah Wilson",
-      department: "Product",
-      position: "Product Manager",
-      leaveType: "Annual Leave",
-      startDate: "2025-08-05",
-      endDate: "2025-08-12",
-      days: 8,
-      reason: "Family vacation to Europe",
-      appliedDate: "2025-07-20",
-      status: "Approved",
-      priority: "Medium",
-      attachments: 0,
-      approvedDate: "2025-07-22",
-      approvedBy: "HR Manager",
-    },
-    {
-      id: 3,
-      employeeId: "EMP003",
-      employeeName: "Mike Johnson",
-      department: "Design",
-      position: "UX Designer",
-      leaveType: "Personal Leave",
-      startDate: "2025-07-30",
-      endDate: "2025-07-30",
-      days: 1,
-      reason: "Family wedding ceremony",
-      appliedDate: "2025-07-28",
-      status: "Approved",
-      priority: "Low",
-      attachments: 0,
-      approvedDate: "2025-07-29",
-      approvedBy: "Team Lead",
-    },
-    {
-      id: 4,
-      employeeId: "EMP004",
-      employeeName: "Emma Davis",
-      department: "Human Resources",
-      position: "HR Manager",
-      leaveType: "Maternity Leave",
-      startDate: "2025-08-15",
-      endDate: "2025-11-15",
-      days: 92,
-      reason: "Maternity leave for childbirth",
-      appliedDate: "2025-07-15",
-      status: "Approved",
-      priority: "High",
-      attachments: 2,
-      approvedDate: "2025-07-16",
-      approvedBy: "Director",
-    },
-    {
-      id: 5,
-      employeeId: "EMP005",
-      employeeName: "Alex Rodriguez",
-      department: "Marketing",
-      position: "Marketing Specialist",
-      leaveType: "Sick Leave",
-      startDate: "2025-07-28",
-      endDate: "2025-07-29",
-      days: 2,
-      reason: "Doctor appointment and recovery",
-      appliedDate: "2025-07-27",
-      status: "Rejected",
-      priority: "Medium",
-      attachments: 0,
-      rejectedDate: "2025-07-28",
-      rejectedBy: "HR Manager",
-      rejectionReason: "Insufficient sick leave balance",
-    },
-    {
-      id: 6,
-      employeeId: "EMP006",
-      employeeName: "Lisa Chen",
-      department: "Analytics",
-      position: "Data Analyst",
-      leaveType: "Annual Leave",
-      startDate: "2025-08-20",
-      endDate: "2025-08-22",
-      days: 3,
-      reason: "Short break and rest",
-      appliedDate: "2025-07-29",
-      status: "Pending",
-      priority: "Low",
-      attachments: 0,
-    },
-  ];
+  // Fetch leave applications from backend
+  const fetchLeaveApplications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  // Employee leave statistics for current month
-  const employeeLeaveStats = [
-    {
-      employeeId: "EMP001",
-      employeeName: "John Doe",
-      department: "Engineering",
-      totalLeaves: 5,
-      approved: 3,
-      rejected: 1,
-      pending: 1,
-      sickLeaves: 2,
-      annualLeaves: 2,
-      personalLeaves: 1,
-      remainingLeaves: 15,
-    },
-    {
-      employeeId: "EMP002",
-      employeeName: "Sarah Wilson",
-      department: "Product",
-      totalLeaves: 8,
-      approved: 7,
-      rejected: 0,
-      pending: 1,
-      sickLeaves: 1,
-      annualLeaves: 6,
-      personalLeaves: 1,
-      remainingLeaves: 12,
-    },
-    {
-      employeeId: "EMP003",
-      employeeName: "Mike Johnson",
-      department: "Design",
-      totalLeaves: 3,
-      approved: 3,
-      rejected: 0,
-      pending: 0,
-      sickLeaves: 0,
-      annualLeaves: 2,
-      personalLeaves: 1,
-      remainingLeaves: 17,
-    },
-    {
-      employeeId: "EMP004",
-      employeeName: "Emma Davis",
-      department: "Human Resources",
-      totalLeaves: 92,
-      approved: 92,
-      rejected: 0,
-      pending: 0,
-      sickLeaves: 0,
-      annualLeaves: 0,
-      personalLeaves: 0,
-      remainingLeaves: 8,
-    },
-    {
-      employeeId: "EMP005",
-      employeeName: "Alex Rodriguez",
-      department: "Marketing",
-      totalLeaves: 4,
-      approved: 2,
-      rejected: 2,
-      pending: 0,
-      sickLeaves: 3,
-      annualLeaves: 1,
-      personalLeaves: 0,
-      remainingLeaves: 16,
-    },
-    {
-      employeeId: "EMP006",
-      employeeName: "Lisa Chen",
-      department: "Analytics",
-      totalLeaves: 2,
-      approved: 1,
-      rejected: 0,
-      pending: 1,
-      sickLeaves: 0,
-      annualLeaves: 2,
-      personalLeaves: 0,
-      remainingLeaves: 18,
-    },
-  ];
+      const response = await fetch(`${API_BASE_URL}/leaves`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Fetched leave applications:", data);
+      setLeaveApplications(data);
+    } catch (error) {
+      console.error("Error fetching leave applications:", error);
+      setError(error.message);
+      setLeaveApplications([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchLeaveApplications();
+  }, []);
+
+  // Polling: refresh data every 10 seconds for real-time updates
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchLeaveApplications();
+    }, 10000); // 10 seconds
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Handle approve/reject actions
+  const handleApprove = async (leaveId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/leaves/${leaveId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: "Approved",
+          approvedBy: "Admin",
+        }),
+      });
+
+      if (response.ok) {
+        console.log(`Leave application ${leaveId} approved`);
+        await fetchLeaveApplications();
+      } else {
+        throw new Error("Failed to approve leave application");
+      }
+    } catch (error) {
+      console.error("Error approving leave:", error);
+      alert("Failed to approve leave application");
+    }
+  };
+
+  const handleReject = async (leaveId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/leaves/${leaveId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: "Rejected",
+          approvedBy: "Admin",
+        }),
+      });
+
+      if (response.ok) {
+        console.log(`Leave application ${leaveId} rejected`);
+        await fetchLeaveApplications();
+      } else {
+        throw new Error("Failed to reject leave application");
+      }
+    } catch (error) {
+      console.error("Error rejecting leave:", error);
+      alert("Failed to reject leave application");
+    }
+  };
 
   const leaveTypes = [
     "all",
     "Sick Leave",
-    "Annual Leave",
+    "Family Event",
     "Personal Leave",
+    "Emergency",
+    "Annual Leave",
     "Maternity Leave",
-    "Emergency Leave",
   ];
   const statusTypes = ["all", "Pending", "Approved", "Rejected"];
   const months = [
@@ -258,7 +145,7 @@ const LeaveManagement = () => {
     "December",
   ];
 
-  // Stats data
+  // Stats data - calculated from real data
   const stats = [
     {
       title: "Pending Applications",
@@ -288,72 +175,6 @@ const LeaveManagement = () => {
       change: "+8%",
       changeType: "positive",
     },
-    {
-      title: "Avg. Processing Time",
-      value: "2.3 days",
-      icon: Timer,
-      type: "processing",
-      change: "-0.5d",
-      changeType: "positive",
-    },
-  ];
-
-  // Chart data for leave status distribution
-  const leaveStatusData = [
-    {
-      name: "Approved",
-      value: leaveApplications.filter((app) => app.status === "Approved")
-        .length,
-      color: "#22c55e",
-    },
-    {
-      name: "Pending",
-      value: leaveApplications.filter((app) => app.status === "Pending").length,
-      color: "#f59e0b",
-    },
-    {
-      name: "Rejected",
-      value: leaveApplications.filter((app) => app.status === "Rejected")
-        .length,
-      color: "#ef4444",
-    },
-  ];
-
-  // Leave type distribution data
-  const leaveTypeData = [
-    {
-      type: "Sick Leave",
-      count: leaveApplications.filter((app) => app.leaveType === "Sick Leave")
-        .length,
-    },
-    {
-      type: "Annual Leave",
-      count: leaveApplications.filter((app) => app.leaveType === "Annual Leave")
-        .length,
-    },
-    {
-      type: "Personal Leave",
-      count: leaveApplications.filter(
-        (app) => app.leaveType === "Personal Leave"
-      ).length,
-    },
-    {
-      type: "Maternity Leave",
-      count: leaveApplications.filter(
-        (app) => app.leaveType === "Maternity Leave"
-      ).length,
-    },
-  ];
-
-  // Monthly leave trend (sample data)
-  const monthlyTrendData = [
-    { month: "Jan", applications: 45, approved: 38, rejected: 7 },
-    { month: "Feb", applications: 52, approved: 46, rejected: 6 },
-    { month: "Mar", applications: 48, approved: 42, rejected: 6 },
-    { month: "Apr", applications: 55, approved: 48, rejected: 7 },
-    { month: "May", applications: 62, approved: 55, rejected: 7 },
-    { month: "Jun", applications: 58, approved: 52, rejected: 6 },
-    { month: "Jul", applications: 64, approved: 58, rejected: 6 },
   ];
 
   // Filter applications
@@ -371,17 +192,7 @@ const LeaveManagement = () => {
   });
 
   // Filter employee stats by selected month
-  const filteredEmployeeStats = employeeLeaveStats;
-
-  const handleApprove = (id) => {
-    console.log(`Approving leave application ${id}`);
-    // Here you would update the application status
-  };
-
-  const handleReject = (id) => {
-    console.log(`Rejecting leave application ${id}`);
-    // Here you would update the application status
-  };
+  const filteredEmployeeStats = [];
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -409,6 +220,16 @@ const LeaveManagement = () => {
               </div>
             </div>
             <div className="header-actions">
+              <button
+                className="btn-secondary-small"
+                onClick={fetchLeaveApplications}
+                disabled={loading}
+              >
+                <RefreshCw
+                  className={`btn-icon ${loading ? "spinning" : ""}`}
+                />
+                Refresh
+              </button>
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
@@ -427,6 +248,139 @@ const LeaveManagement = () => {
             </div>
           </div>
         </div>
+
+        {/* Pending Leave Applications Section */}
+        {leaveApplications.filter((app) => app.status === "Pending").length >
+        0 ? (
+          <div className="pending-leave-section">
+            <div className="pending-header">
+              <div className="pending-title-wrapper">
+                <AlertCircle className="pending-icon" />
+                <h3 className="pending-title">
+                  Pending Leave Requests (
+                  {
+                    leaveApplications.filter((app) => app.status === "Pending")
+                      .length
+                  }
+                  )
+                </h3>
+              </div>
+              <p className="pending-subtitle">
+                Review and approve pending leave applications
+              </p>
+            </div>
+            <div className="pending-leave-cards">
+              {leaveApplications
+                .filter((app) => app.status === "Pending")
+                .slice(0, 5)
+                .map((application) => (
+                  <div
+                    key={application._id}
+                    className="pending-leave-card compact"
+                  >
+                    <div className="leave-card-header">
+                      <div className="employee-info">
+                        <div className="employee-avatar">
+                          {application.employeeName
+                            ? application.employeeName
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                            : "EMP"}
+                        </div>
+                        <div className="employee-details">
+                          <h4 className="employee-name">
+                            {application.employeeName || "Unknown Employee"}
+                          </h4>
+                          <p className="employee-meta">
+                            {application.employeeId} • {application.department}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="leave-status-info">
+                        <span className="leave-type-badge">
+                          {application.leaveType}
+                        </span>
+                        <span className="leave-duration">
+                          {application.days ||
+                            Math.ceil(
+                              (new Date(application.endDate) -
+                                new Date(application.startDate)) /
+                                (1000 * 60 * 60 * 24)
+                            ) + 1}{" "}
+                          days
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="leave-card-content">
+                      <div className="leave-dates-compact">
+                        <div className="date-range">
+                          <Calendar className="date-icon" />
+                          <span className="date-text">
+                            {new Date(application.startDate).toLocaleDateString(
+                              "en-US",
+                              { month: "short", day: "numeric" }
+                            )}{" "}
+                            -{" "}
+                            {new Date(application.endDate).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              }
+                            )}
+                          </span>
+                        </div>
+                        {application.reason && (
+                          <div className="reason-compact">
+                            <FileText className="reason-icon" />
+                            <span className="reason-text">
+                              {application.reason.length > 50
+                                ? application.reason.substring(0, 50) + "..."
+                                : application.reason}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="leave-card-actions">
+                      <button
+                        className="approve-btn"
+                        onClick={() => handleApprove(application._id)}
+                      >
+                        <Check className="btn-icon" />
+                        Approve
+                      </button>
+                      <button
+                        className="reject-btn"
+                        onClick={() => handleReject(application._id)}
+                      >
+                        <X className="btn-icon" />
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        ) : (
+          <div className="pending-leave-section">
+            <div className="no-pending-leaves">
+              <div className="no-pending-icon">
+                <CheckCircle className="check-icon" />
+              </div>
+              <h4>All Clear!</h4>
+              <p>No pending leave applications to review.</p>
+              <p className="helper-text">
+                New leave requests will appear here for approval.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Stats Grid */}
         <div className="stats-grid">
@@ -450,102 +404,6 @@ const LeaveManagement = () => {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Charts Section */}
-        <div className="charts-section">
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3 className="chart-title">
-                <BarChart3 className="chart-title-icon" />
-                Leave Status Distribution
-              </h3>
-            </div>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie
-                    data={leaveStatusData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
-                    }
-                  >
-                    {leaveStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3 className="chart-title">
-                <CalendarDays className="chart-title-icon" />
-                Leave Type Distribution
-              </h3>
-            </div>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={leaveTypeData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="type" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="#3b82f6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        <div className="charts-section">
-          <div className="chart-card full-width">
-            <div className="chart-header">
-              <h3 className="chart-title">
-                <TrendingUp className="chart-title-icon" />
-                Monthly Leave Applications Trend
-              </h3>
-            </div>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={monthlyTrendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="applications"
-                    stroke="#3b82f6"
-                    strokeWidth={3}
-                    name="Total Applications"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="approved"
-                    stroke="#22c55e"
-                    strokeWidth={3}
-                    name="Approved"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="rejected"
-                    stroke="#ef4444"
-                    strokeWidth={3}
-                    name="Rejected"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
         </div>
 
         {/* Filters */}
@@ -606,8 +464,7 @@ const LeaveManagement = () => {
           <div className="section-header">
             <h3 className="section-title">
               <FileText className="section-icon" />
-              Latest Leave Applications ({filteredApplications.length}{" "}
-              applications)
+              Latest Leave Applications
             </h3>
           </div>
 
@@ -618,110 +475,247 @@ const LeaveManagement = () => {
                   <th className="table-header-cell-compact">Employee</th>
                   <th className="table-header-cell-compact">Leave Details</th>
                   <th className="table-header-cell-compact">Duration</th>
-                  <th className="table-header-cell-compact">Decision</th>
+                  <th className="table-header-cell-compact">Total Leave</th>
+                  <th className="table-header-cell-compact">Leaves Used</th>
+                  <th className="table-header-cell-compact">
+                    Leaves Remaining
+                  </th>
+                  <th className="table-header-cell-compact">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredApplications.map((application) => (
-                  <tr key={application.id} className="table-row-compact">
-                    <td className="table-cell-compact">
-                      <div className="employee-info-compact">
-                        <div className="employee-details-compact">
-                          <h4 className="employee-name-compact">
-                            {application.employeeName}
-                          </h4>
-                          <p className="employee-id-compact">
-                            {application.employeeId}
-                          </p>
-                          <p className="department-compact">
-                            {application.department}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
+                {filteredApplications.map((application) => {
+                  // Calculate leave statistics for this employee
+                  const employeeLeaves = leaveApplications.filter(
+                    (app) =>
+                      app.employeeId === application.employeeId &&
+                      app.status === "Approved"
+                  );
 
-                    <td className="table-cell-compact">
-                      <div className="leave-details">
-                        <div className="leave-type">
-                          <span
-                            className={`leave-type-badge ${application.leaveType
+                  const totalLeavesUsed = employeeLeaves.reduce(
+                    (total, leave) => {
+                      return (
+                        total +
+                        (leave.days ||
+                          Math.ceil(
+                            (new Date(leave.endDate) -
+                              new Date(leave.startDate)) /
+                              (1000 * 60 * 60 * 24)
+                          ) + 1)
+                      );
+                    },
+                    0
+                  );
+
+                  const totalLeaveAllowed = 30; // 30 days per year for all employees
+                  const leavesRemaining = totalLeaveAllowed - totalLeavesUsed;
+
+                  // Check if employee is currently on leave
+                  const currentDate = new Date();
+                  const isOnLeave = employeeLeaves.some((leave) => {
+                    const startDate = new Date(leave.startDate);
+                    const endDate = new Date(leave.endDate);
+                    return currentDate >= startDate && currentDate <= endDate;
+                  });
+
+                  const employeeStatus = isOnLeave ? "On Leave" : "Active";
+
+                  return (
+                    <tr key={application._id} className="table-row-compact">
+                      <td className="table-cell-compact">
+                        <div className="employee-info-compact">
+                          <div className="employee-details-compact">
+                            <h4 className="employee-name-compact">
+                              {application.employeeName}
+                            </h4>
+                            <p className="employee-id-compact">
+                              {application.employeeId}
+                            </p>
+                            <p className="department-compact">
+                              {application.department}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="table-cell-compact">
+                        <div className="leave-details">
+                          <div className="leave-type">
+                            <span
+                              className={`leave-type-badge ${application.leaveType
+                                .toLowerCase()
+                                .replace(" ", "-")}`}
+                            >
+                              {application.leaveType}
+                            </span>
+                          </div>
+                          <div className="reason-text">
+                            {application.reason &&
+                            application.reason.length > 50
+                              ? `${application.reason.substring(0, 50)}...`
+                              : application.reason}
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="table-cell-compact">
+                        <div className="duration-info">
+                          <div className="days-count">
+                            {application.days ||
+                              Math.ceil(
+                                (new Date(application.endDate) -
+                                  new Date(application.startDate)) /
+                                  (1000 * 60 * 60 * 24)
+                              ) + 1}{" "}
+                            days
+                          </div>
+                          <div className="applied-date">
+                            Applied:{" "}
+                            {new Date(
+                              application.appliedDate || application.createdAt
+                            ).toLocaleDateString()}
+                          </div>
+                          <div className="date-range">
+                            {new Date(
+                              application.startDate
+                            ).toLocaleDateString()}{" "}
+                            -{" "}
+                            {new Date(application.endDate).toLocaleDateString()}
+                          </div>
+                          {application.attachments > 0 && (
+                            <div className="attachments">
+                              📎 {application.attachments} file(s)
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="table-cell-compact">
+                        <div className="leave-quota-info">
+                          <div className="quota-number">
+                            {totalLeaveAllowed}
+                          </div>
+                          <div className="quota-label">days/year</div>
+                        </div>
+                      </td>
+
+                      <td className="table-cell-compact">
+                        <div className="leave-used-info">
+                          <div
+                            className={`used-number ${
+                              totalLeavesUsed > totalLeaveAllowed * 0.8
+                                ? "warning"
+                                : ""
+                            }`}
+                          >
+                            {totalLeavesUsed}
+                          </div>
+                          <div className="used-label">days used</div>
+                          <div className="usage-bar">
+                            <div
+                              className="usage-fill"
+                              style={{
+                                width: `${Math.min(
+                                  (totalLeavesUsed / totalLeaveAllowed) * 100,
+                                  100
+                                )}%`,
+                                backgroundColor:
+                                  totalLeavesUsed > totalLeaveAllowed
+                                    ? "#ef4444"
+                                    : totalLeavesUsed > totalLeaveAllowed * 0.8
+                                    ? "#f59e0b"
+                                    : "#10b981",
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="table-cell-compact">
+                        <div className="leave-remaining-info">
+                          <div
+                            className={`remaining-number ${
+                              leavesRemaining < 5 ? "low" : ""
+                            }`}
+                          >
+                            {Math.max(leavesRemaining, 0)}
+                          </div>
+                          <div className="remaining-label">days left</div>
+                          {leavesRemaining < 0 && (
+                            <div className="exceeded-warning">
+                              Exceeded by {Math.abs(leavesRemaining)} days
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="table-cell-compact">
+                        <div className="simple-status">
+                          <div
+                            className={`status-badge-compact ${employeeStatus
                               .toLowerCase()
                               .replace(" ", "-")}`}
                           >
-                            {application.leaveType}
-                          </span>
-                        </div>
-                        <div className="reason-text">
-                          {application.reason.length > 50
-                            ? `${application.reason.substring(0, 50)}...`
-                            : application.reason}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="table-cell-compact">
-                      <div className="duration-info">
-                        <div className="days-count">
-                          {application.days} days
-                        </div>
-                        <div className="applied-date">
-                          Applied:{" "}
-                          {new Date(
-                            application.appliedDate
-                          ).toLocaleDateString()}
-                        </div>
-                        {application.attachments > 0 && (
-                          <div className="attachments">
-                            📎 {application.attachments} file(s)
-                          </div>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="table-cell-compact">
-                      <div className="decision-buttons">
-                        {application.status === "Pending" ? (
-                          <div className="action-buttons-compact">
-                            <button
-                              className="action-btn-compact approve"
-                              title="Accept"
-                              onClick={() => handleApprove(application.id)}
-                            >
-                              <Check className="action-icon-small" />
-                              Accept
-                            </button>
-                            <button
-                              className="action-btn-compact reject"
-                              title="Reject"
-                              onClick={() => handleReject(application.id)}
-                            >
-                              <X className="action-icon-small" />
-                              Reject
-                            </button>
-                          </div>
-                        ) : (
-                          <div
-                            className={`status-badge-compact ${application.status.toLowerCase()}`}
-                          >
                             <div className="status-indicator-small"></div>
-                            {application.status}
+                            {employeeStatus}
                           </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {application.status === "Pending" && (
+                            <div className="quick-actions-minimal">
+                              <button
+                                className="quick-action-btn approve"
+                                onClick={() => handleApprove(application._id)}
+                                title="Approve Application"
+                              >
+                                <Check className="quick-action-icon" />
+                                Approve
+                              </button>
+                              <button
+                                className="quick-action-btn reject"
+                                onClick={() => handleReject(application._id)}
+                                title="Reject Application"
+                              >
+                                <X className="quick-action-icon" />
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
 
-        {filteredApplications.length === 0 && (
+        {loading && (
+          <div className="empty-state-compact">
+            <RefreshCw className="empty-icon spinning" />
+            <h3 className="empty-title">Loading leave applications...</h3>
+            <p className="empty-text">Please wait while we fetch the data.</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="empty-state-compact">
+            <XCircle className="empty-icon" />
+            <h3 className="empty-title">Error loading leave applications</h3>
+            <p className="empty-text">{error}</p>
+            <button onClick={fetchLeaveApplications} className="btn-primary">
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && filteredApplications.length === 0 && (
           <div className="empty-state-compact">
             <FileText className="empty-icon" />
             <h3 className="empty-title">No leave applications found</h3>
             <p className="empty-text">
-              Try adjusting your search criteria or filters.
+              {leaveApplications.length === 0
+                ? "No leave applications have been submitted yet."
+                : "Try adjusting your search criteria or filters."}
             </p>
           </div>
         )}

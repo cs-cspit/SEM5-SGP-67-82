@@ -6,8 +6,10 @@ import Leave from '../models/Leave.js';
 // Get dashboard statistics
 export const getDashboardStats = async (req, res) => {
   try {
-    // Get total employees
-    const totalEmployees = await Employee.countDocuments({ status: 'Active' });
+    // Get total employees (Active + On Leave)
+    const totalEmployees = await Employee.countDocuments({ 
+      status: { $in: ['Active', 'On Leave'] } 
+    });
     
     // Get total departments
     const totalDepartments = await Department.countDocuments({ status: 'Active' });
@@ -29,8 +31,9 @@ export const getDashboardStats = async (req, res) => {
       att.status === 'Present'
     ).length;
     
-    // Calculate absent count: total employees minus present employees
-    // Ensure absent count is not negative
+    // Calculate absent count: active employees minus present employees
+    // Only active employees can be marked as absent (we'll get breakdown later)
+    // For now, use a temporary calculation
     const absentToday = Math.max(0, totalEmployees - presentToday);
     
     // Get pending attendance requests
@@ -96,13 +99,28 @@ export const getDashboardStats = async (req, res) => {
       },
       { $sort: { "_id.date": 1 } }
     ]);
+
+    // Get employee status breakdown
+    const activeEmployees = await Employee.countDocuments({ status: 'Active' });
+    const onLeaveEmployees = await Employee.countDocuments({ status: 'On Leave' });
+    
+    // Recalculate absent count with correct logic: active employees minus present employees
+    const correctAbsentToday = Math.max(0, activeEmployees - presentToday);
+    
+    // Verify total calculation (for debugging)
+    console.log(`Dashboard Stats: Active=${activeEmployees}, OnLeave=${onLeaveEmployees}, Total=${totalEmployees}, Present=${presentToday}, Absent=${correctAbsentToday}`);
     
     res.json({
-      totalEmployees,
+      totalEmployees, // This equals activeEmployees + onLeaveEmployees
       totalDepartments,
+      employeeStatusBreakdown: {
+        active: activeEmployees,
+        onLeave: onLeaveEmployees
+      },
       attendanceToday: {
         present: presentToday,
-        absent: absentToday
+        absent: correctAbsentToday,
+        onLeave: onLeaveEmployees
       },
       pendingAttendance,
       pendingLeaves,
@@ -264,7 +282,9 @@ export const getTodayAttendanceSummary = async (req, res) => {
       date: { $gte: today, $lt: tomorrow }
     }).populate('employee', 'name employeeId department position');
 
-    const totalEmployees = await Employee.countDocuments({ status: 'Active' });
+    const totalEmployees = await Employee.countDocuments({ 
+      status: { $in: ['Active', 'On Leave'] } 
+    });
     
     // Count by status
     const statusCounts = {

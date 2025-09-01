@@ -14,7 +14,7 @@ import {
   Line,
 } from "recharts";
 import {
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   Users,
   Calendar,
@@ -70,5 +70,3 @@ const SalaryReport = () => {
 };
 
 export default SalaryReport;
-
-

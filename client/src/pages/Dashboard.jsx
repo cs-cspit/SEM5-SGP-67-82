@@ -1,24 +1,11 @@
 // client/src/pages/Dashboard.jsx
 import React, { useState, useEffect } from "react";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from "recharts";
-import {
   Users,
   UserCheck,
   UserX,
   Clock,
   Calendar,
-  TrendingUp,
   Sun,
   Search,
   ArrowUpRight,
@@ -59,6 +46,15 @@ const Dashboard = () => {
       if (!response.ok) throw new Error("Failed to fetch dashboard stats");
       const data = await response.json();
       console.log("Dashboard data received:", data); // Debug log
+
+      // Verify total calculation
+      const activeCount = data.employeeStatusBreakdown?.active || 0;
+      const onLeaveCount = data.employeeStatusBreakdown?.onLeave || 0;
+      const calculatedTotal = activeCount + onLeaveCount;
+      console.log(
+        `Frontend verification: Active(${activeCount}) + OnLeave(${onLeaveCount}) = ${calculatedTotal}, API Total: ${data.totalEmployees}`
+      );
+
       setDashboardData(data);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
@@ -137,61 +133,31 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Transform data for charts - simplified to Present/Absent only
+  // Transform data for stats cards
   const stats = [
     {
       title: "Total Employees",
       value: dashboardData.totalEmployees.toString(),
       icon: Users,
       type: "total",
-      chartData: [
-        {
-          name: "Active",
-          value: dashboardData.totalEmployees,
-          color: "#3b82f6",
-        },
-        {
-          name: "Inactive",
-          value: Math.max(0, dashboardData.totalEmployees - 3),
-          color: "#e5e7eb",
-        },
-      ],
     },
     {
       title: "Present Today",
       value: dashboardData.attendanceToday.present.toString(),
       icon: UserCheck,
       type: "present",
-      chartData: [
-        {
-          name: "Present",
-          value: dashboardData.attendanceToday.present,
-          color: "#10b981",
-        },
-        {
-          name: "Total",
-          value: dashboardData.totalEmployees,
-          color: "#e5e7eb",
-        },
-      ],
     },
     {
       title: "Absent Today",
       value: dashboardData.attendanceToday.absent.toString(),
       icon: UserX,
       type: "absent",
-      chartData: [
-        {
-          name: "Absent",
-          value: dashboardData.attendanceToday.absent,
-          color: "#ef4444",
-        },
-        {
-          name: "Present",
-          value: dashboardData.attendanceToday.present,
-          color: "#e5e7eb",
-        },
-      ],
+    },
+    {
+      title: "On Leave Today",
+      value: (dashboardData.attendanceToday.onLeave || 0).toString(),
+      icon: Calendar,
+      type: "leave",
     },
   ];
 
@@ -357,97 +323,6 @@ const Dashboard = () => {
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Interactive Charts Section */}
-        <div className="charts-section">
-          <h3 className="charts-title">
-            <TrendingUp className="w-5 h-5" />
-            Analytics Overview
-          </h3>
-
-          <div className="charts-grid">
-            {/* Attendance Overview Pie Chart */}
-            <div className="chart-card">
-              <h4 className="chart-card-title">Attendance Distribution</h4>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      {
-                        name: "Present",
-                        value: dashboardData.attendanceToday.present,
-                        fill: "#10b981",
-                      },
-                      {
-                        name: "Absent",
-                        value: dashboardData.attendanceToday.absent,
-                        fill: "#ef4444",
-                      },
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
-                    }
-                  ></Pie>
-                  <Tooltip
-                    formatter={(value, name) => [value, name]}
-                    labelStyle={{ color: "#374151" }}
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Employee Status Bar Chart */}
-            <div className="chart-card">
-              <h4 className="chart-card-title">Employee Status Overview</h4>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={[
-                    {
-                      name: "Total",
-                      value: dashboardData.totalEmployees,
-                      fill: "#3b82f6",
-                    },
-                    {
-                      name: "Present",
-                      value: dashboardData.attendanceToday.present,
-                      fill: "#10b981",
-                    },
-                    {
-                      name: "Absent",
-                      value: dashboardData.attendanceToday.absent,
-                      fill: "#ef4444",
-                    },
-                  ]}
-                >
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip
-                    formatter={(value, name) => [value, "Employees"]}
-                    labelStyle={{ color: "#374151" }}
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                    }}
-                  />
-                  <Bar dataKey="value" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
         </div>
       </div>
     </div>

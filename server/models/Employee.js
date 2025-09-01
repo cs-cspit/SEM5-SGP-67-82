@@ -35,9 +35,10 @@ const employeeSchema = new mongoose.Schema(
       required: [true, "Department is required"],
       enum: ["Engineering", "Product", "Design", "Human Resources", "Marketing", "Analytics", "Finance", "Operations"],
     },
-    salary: {
+    hourlySalary: {
       type: Number,
-      min: [0, "Salary cannot be negative"],
+      required: [true, "Hourly salary is required"],
+      min: [0, "Hourly salary cannot be negative"],
       default: 0,
     },
     joinDate: {
@@ -47,7 +48,7 @@ const employeeSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Inactive", "On Leave"],
+      enum: ["Active", "On Leave"],
       default: "Active",
     },
     location: {
