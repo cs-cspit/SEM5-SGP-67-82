@@ -34,29 +34,88 @@
                     </div>
                 </div>
 
-                <!-- Location Verification -->
-                <div class="location-section">
-                    <h3>Location Verification</h3>
-                    <div id="locationStatus" class="status-message loading">Getting your location...</div>
-                    <div id="locationInfo" class="location-info hidden">
-                        <p id="coordinates"></p>
+                <!-- Navigation Tabs -->
+                <div class="nav-tabs">
+                    <button class="tab-btn active" onclick="showTab('attendance')">Attendance</button>
+                    <button class="tab-btn" onclick="showTab('leave')">Leave Request</button>
+                </div>
+
+                <!-- Attendance Tab -->
+                <div id="attendanceTab" class="tab-content active">
+                    <!-- Location Verification -->
+                    <div class="location-section">
+                        <h3>Location Verification</h3>
+                        <div id="locationStatus" class="status-message loading">Getting your location...</div>
+                        <div id="locationInfo" class="location-info hidden">
+                            <p id="coordinates"></p>
+                        </div>
+                    </div>
+
+                    <!-- Check-in/Check-out Buttons -->
+                    <div id="attendanceActions" class="attendance-actions hidden">
+                        <button id="checkInBtn" class="btn btn-check-in" onclick="checkIn()">
+                            <span class="btn-icon">⏰</span>
+                            Check In
+                        </button>
+                        <button id="checkOutBtn" class="btn btn-check-out" onclick="checkOut()">
+                            <span class="btn-icon">🚪</span>
+                            Check Out
+                        </button>
+                    </div>
+
+                    <!-- Attendance Result -->
+                    <div id="attendanceResult" class="status-message hidden"></div>
+                </div>
+
+                <!-- Leave Request Tab -->
+                <div id="leaveTab" class="tab-content">
+                    <div class="leave-request-section">
+                        <h3>Request Leave</h3>
+                        <form id="leaveRequestForm" class="leave-form">
+                            <div class="form-group">
+                                <label for="leaveType">Leave Type:</label>
+                                <select id="leaveType" required>
+                                    <option value="">Select leave type</option>
+                                    <option value="Sick Leave">Sick Leave</option>
+                                    <option value="Family Event">Family Event</option>
+                                    <option value="Personal Leave">Personal Leave</option>
+                                    <option value="Emergency">Emergency</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="startDate">Start Date:</label>
+                                <input type="date" id="startDate" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="endDate">End Date:</label>
+                                <input type="date" id="endDate" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="leaveReason">Reason:</label>
+                                <textarea id="leaveReason" placeholder="Please provide reason for leave" rows="3" required></textarea>
+                            </div>
+
+                            <div id="leaveDaysInfo" class="days-info hidden">
+                                <span id="daysCount">0 days</span>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Submit Leave Request</button>
+                        </form>
+
+                        <div id="leaveResult" class="status-message hidden"></div>
+                    </div>
+
+                    <!-- Leave History -->
+                    <div class="leave-history-section">
+                        <h3>Recent Leave Requests</h3>
+                        <div id="leaveHistory" class="leave-history">
+                            <p>Loading leave history...</p>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Check-in/Check-out Buttons -->
-                <div id="attendanceActions" class="attendance-actions hidden">
-                    <button id="checkInBtn" class="btn btn-check-in" onclick="checkIn()">
-                        <span class="btn-icon">⏰</span>
-                        Check In
-                    </button>
-                    <button id="checkOutBtn" class="btn btn-check-out" onclick="checkOut()">
-                        <span class="btn-icon">🚪</span>
-                        Check Out
-                    </button>
-                </div>
-
-                <!-- Attendance Result -->
-                <div id="attendanceResult" class="status-message hidden"></div>
             </div>
         </div>
     </div>

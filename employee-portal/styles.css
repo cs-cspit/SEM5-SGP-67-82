@@ -497,3 +497,203 @@ body {
 .working-hours strong {
     color: #0369a1;
 }
+
+/* Navigation Tabs */
+.nav-tabs {
+    display: flex;
+    border-bottom: 2px solid #e2e8f0;
+    margin: 20px 0;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover {
+    color: #3b82f6;
+    background: #f8fafc;
+}
+
+.tab-btn.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+    background: #f8fafc;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    padding: 20px 0;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Leave Request Section */
+.leave-request-section {
+    background: #f8fafc;
+    padding: 24px;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.leave-form .form-group {
+    margin-bottom: 20px;
+}
+
+.leave-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.leave-form select,
+.leave-form input[type="date"],
+.leave-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.leave-form select:focus,
+.leave-form input[type="date"]:focus,
+.leave-form textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.leave-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.days-info {
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 16px 0;
+    text-align: center;
+    font-weight: 600;
+    color: #1d4ed8;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Leave History Section */
+.leave-history-section {
+    background: white;
+    padding: 24px;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.leave-history-section h3 {
+    margin-bottom: 16px;
+    color: #374151;
+}
+
+.leave-history {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.leave-request-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.leave-request-item:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.leave-request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.leave-type {
+    font-weight: 600;
+    color: #374151;
+}
+
+.leave-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.leave-status.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.leave-status.approved {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.leave-status.rejected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.leave-dates {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.leave-reason {
+    font-size: 14px;
+    color: #374151;
+    font-style: italic;
+}

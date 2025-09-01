@@ -64,7 +64,7 @@ const AddEmployeeModal = ({ isOpen, onClose, onSubmit }) => {
     "Operations",
   ];
 
-  const statuses = ["Active", "Inactive", "On Leave"];
+  const statuses = ["Active", "On Leave"];
   const genders = ["Male", "Female"];
   const maritalStatuses = ["Single", "Married"];
 

@@ -48,7 +48,7 @@ const employeeSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Inactive", "On Leave"],
+      enum: ["Active", "On Leave"],
       default: "Active",
     },
     location: {

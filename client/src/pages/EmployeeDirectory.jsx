@@ -35,7 +35,7 @@ const EmployeeDirectory = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const statuses = ["all", "Active", "Inactive", "On Leave"];
+  const statuses = ["all", "Active", "On Leave"];
 
   // Calculate attendance percentage for an employee
   const calculateAttendancePercentage = async (employeeId) => {

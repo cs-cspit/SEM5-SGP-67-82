@@ -45,6 +45,8 @@ async function login() {
             // Initialize location verification and check today's attendance
             await initLocationVerification();
             await checkTodayAttendance();
+            await loadLeaveHistory();
+            setupLeaveForm();
             
             errorDiv.classList.add('hidden');
         } else {
@@ -412,4 +414,224 @@ async function getLocationName(lat, lng) {
 function showError(element, message) {
     element.textContent = message;
     element.classList.remove('hidden');
+}
+
+// Tab functionality
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + 'Tab').classList.add('active');
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+}
+
+// Setup leave form
+function setupLeaveForm() {
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const daysInfo = document.getElementById('leaveDaysInfo');
+    const daysCount = document.getElementById('daysCount');
+    const form = document.getElementById('leaveRequestForm');
+    
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.min = today;
+    endDateInput.min = today;
+    
+    // Calculate days when dates change
+    function calculateDays() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate && endDate && endDate >= startDate) {
+            const timeDiff = endDate.getTime() - startDate.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+            
+            if (daysDiff >= 1 && daysDiff <= 7) {
+                daysCount.textContent = `${daysDiff} day${daysDiff > 1 ? 's' : ''}`;
+                daysInfo.classList.remove('hidden');
+                daysInfo.style.color = '#1d4ed8';
+                return daysDiff;
+            } else if (daysDiff > 7) {
+                daysCount.textContent = `${daysDiff} days (Maximum 7 days allowed)`;
+                daysInfo.classList.remove('hidden');
+                daysInfo.style.color = '#dc2626';
+                return null;
+            } else {
+                daysInfo.classList.add('hidden');
+                return null;
+            }
+        } else {
+            daysInfo.classList.add('hidden');
+            return null;
+        }
+    }
+    
+    startDateInput.addEventListener('change', () => {
+        if (startDateInput.value) {
+            endDateInput.min = startDateInput.value;
+            if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                endDateInput.value = startDateInput.value;
+            }
+        }
+        calculateDays();
+    });
+    
+    endDateInput.addEventListener('change', calculateDays);
+    
+    // Handle form submission
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const days = calculateDays();
+        if (!days || days > 7) {
+            showLeaveError('Please select a valid date range (1-7 days)');
+            return;
+        }
+        
+        await submitLeaveRequest();
+    });
+}
+
+// Submit leave request
+async function submitLeaveRequest() {
+    const form = document.getElementById('leaveRequestForm');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const resultDiv = document.getElementById('leaveResult');
+    
+    // Get form data
+    const formData = {
+        employeeId: currentEmployee._id,
+        leaveType: document.getElementById('leaveType').value,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        reason: document.getElementById('leaveReason').value.trim()
+    };
+    
+    // Validate form data
+    if (!formData.leaveType || !formData.startDate || !formData.endDate || !formData.reason) {
+        showLeaveError('Please fill in all fields');
+        return;
+    }
+    
+    if (formData.reason.length < 10) {
+        showLeaveError('Please provide a detailed reason (at least 10 characters)');
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+    resultDiv.textContent = 'Submitting leave request...';
+    resultDiv.className = 'status-message loading';
+    resultDiv.classList.remove('hidden');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/leaves`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const responseData = await response.json();
+        
+        if (response.ok) {
+            resultDiv.textContent = '✅ Leave request submitted successfully! Waiting for approval.';
+            resultDiv.className = 'status-message success';
+            
+            // Reset form
+            form.reset();
+            document.getElementById('leaveDaysInfo').classList.add('hidden');
+            
+            // Reload leave history
+            await loadLeaveHistory();
+            
+            // Auto hide result after 5 seconds
+            setTimeout(() => {
+                resultDiv.classList.add('hidden');
+            }, 5000);
+        } else {
+            throw new Error(responseData.message || 'Failed to submit leave request');
+        }
+    } catch (error) {
+        console.error('Leave request error:', error);
+        showLeaveError(error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Leave Request';
+    }
+}
+
+// Load leave history
+async function loadLeaveHistory() {
+    const historyDiv = document.getElementById('leaveHistory');
+    
+    try {
+        historyDiv.innerHTML = '<p>Loading leave history...</p>';
+        
+        const response = await fetch(`${API_BASE_URL}/leaves/employee/${currentEmployee._id}`);
+        
+        if (response.ok) {
+            const leaveHistory = await response.json();
+            displayLeaveHistory(leaveHistory);
+        } else {
+            historyDiv.innerHTML = '<p>No leave history found.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading leave history:', error);
+        historyDiv.innerHTML = '<p>Failed to load leave history.</p>';
+    }
+}
+
+// Display leave history
+function displayLeaveHistory(leaveHistory) {
+    const historyDiv = document.getElementById('leaveHistory');
+    
+    if (!leaveHistory || leaveHistory.length === 0) {
+        historyDiv.innerHTML = '<p>No leave requests found.</p>';
+        return;
+    }
+    
+    const historyHTML = leaveHistory
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5) // Show only last 5 requests
+        .map(leave => {
+            const startDate = new Date(leave.startDate).toLocaleDateString();
+            const endDate = new Date(leave.endDate).toLocaleDateString();
+            const statusClass = leave.status.toLowerCase();
+            
+            return `
+                <div class="leave-request-item">
+                    <div class="leave-request-header">
+                        <span class="leave-type">${leave.leaveType}</span>
+                        <span class="leave-status ${statusClass}">${leave.status}</span>
+                    </div>
+                    <div class="leave-dates">${startDate} - ${endDate}</div>
+                    <div class="leave-reason">"${leave.reason}"</div>
+                </div>
+            `;
+        })
+        .join('');
+    
+    historyDiv.innerHTML = historyHTML;
+}
+
+// Show leave error
+function showLeaveError(message) {
+    const resultDiv = document.getElementById('leaveResult');
+    resultDiv.textContent = message;
+    resultDiv.className = 'status-message error';
+    resultDiv.classList.remove('hidden');
 }

@@ -14,9 +14,10 @@ export const markAttendance = async (req, res) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // Check if employee is active
-    if (employee.status !== 'Active') {
-      return res.status(400).json({ message: 'Cannot mark attendance for inactive employee' });
+    // Allow attendance for Active employees only
+    // On Leave employees can still mark attendance in case they're present
+    if (employee.status !== 'Active' && employee.status !== 'On Leave') {
+      return res.status(400).json({ message: 'Cannot mark attendance for employee with this status' });
     }
 
     // Get today's date (start of day)
@@ -382,9 +383,9 @@ export const checkIn = async (req, res) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // Check if employee is active
-    if (employee.status !== 'Active') {
-      return res.status(400).json({ message: 'Cannot check in for inactive employee' });
+    // Check if employee is active or on leave
+    if (employee.status !== 'Active' && employee.status !== 'On Leave') {
+      return res.status(400).json({ message: 'Cannot check in for employee with this status' });
     }
 
     // Get today's date (start of day)
@@ -453,9 +454,9 @@ export const checkOut = async (req, res) => {
       return res.status(404).json({ message: 'Employee not found' });
     }
 
-    // Check if employee is active
-    if (employee.status !== 'Active') {
-      return res.status(400).json({ message: 'Cannot check out for inactive employee' });
+    // Check if employee is active or on leave
+    if (employee.status !== 'Active' && employee.status !== 'On Leave') {
+      return res.status(400).json({ message: 'Cannot check out for employee with this status' });
     }
 
     // Get today's date (start of day)
@@ -574,8 +575,13 @@ export const markAbsentEmployees = async (req, res) => {
     
     console.log('Marking absent employees for date:', targetDate);
 
-    // Get all active employees
+    // Get all active employees (only active employees should be marked absent)
     const activeEmployees = await Employee.find({ status: 'Active' });
+    
+    // Get total employees count (Active + On Leave) for reporting
+    const totalEmployeesCount = await Employee.countDocuments({ 
+      status: { $in: ['Active', 'On Leave'] } 
+    });
     
     // Get existing attendance records for the date
     const existingAttendance = await Attendance.find({
@@ -631,7 +637,8 @@ export const markAbsentEmployees = async (req, res) => {
     res.json({
       message: `Successfully marked ${createdRecords.length} employees as absent`,
       date: targetDate.toISOString().split('T')[0],
-      totalEmployees: activeEmployees.length,
+      totalEmployees: totalEmployeesCount, // Total employees (Active + On Leave)
+      activeEmployees: activeEmployees.length, // Only active employees
       markedEmployees: markedEmployeeIds.size,
       absentMarked: createdRecords.length,
       absentEmployees: createdRecords.map(record => ({

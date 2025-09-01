@@ -472,15 +472,6 @@
   background: #22c55e;
 }
 
-.status-badge-compact.inactive {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.status-badge-compact.inactive .status-indicator-small {
-  background: #ef4444;
-}
-
 .status-badge-compact.on-leave {
   background: #fef3c7;
   color: #92400e;

@@ -25,7 +25,7 @@ const leaveSchema = new mongoose.Schema(
     },
     leaveType: {
       type: String,
-      enum: ["Sick Leave", "Annual Leave", "Personal Leave", "Maternity Leave", "Emergency Leave"],
+      enum: ["Sick Leave", "Family Event", "Personal Leave", "Emergency", "Annual Leave", "Maternity Leave", "Emergency Leave"],
       required: [true, "Leave type is required"],
     },
     startDate: {
