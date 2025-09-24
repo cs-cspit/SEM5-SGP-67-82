@@ -140,7 +140,14 @@ const EmployeeDirectory = () => {
       setDepartments(departmentNames);
     } catch (error) {
       console.error("Error fetching departments:", error);
-      setDepartments(["all", "Engineering", "HR", "Marketing", "Finance"]);
+      setDepartments([
+        "all",
+        "Engineering",
+        "Human Resources",
+        "Marketing",
+        "Finance",
+        "Operations",
+      ]);
     }
   };
 

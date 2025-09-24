@@ -1,27 +1,36 @@
-import { Link, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Clock,
-  FileText,
-  Users,
-  IndianRupee,
-  LogOut,
-  Building2,
-} from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Clock, FileText, Users, LogOut } from "lucide-react";
 import "./Sidebar.css";
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const sidebarItems = [
-    { icon: LayoutDashboard, name: "Dashboard", href: "/" },
-    { icon: Users, name: "Employee Directory", href: "/employee-directory" },
-    { icon: Clock, name: "Attendance", href: "/attendance" },
-    { icon: FileText, name: "Leave Management", href: "/leave-management" },
-    { icon: IndianRupee, name: "Salary Report", href: "/salary-report" },
+    { icon: LayoutDashboard, name: "Dashboard", href: "/dashboard" },
+    {
+      icon: Users,
+      name: "Employee Directory",
+      href: "/dashboard/employee-directory",
+    },
+    { icon: Clock, name: "Attendance", href: "/dashboard/attendance" },
+    {
+      icon: FileText,
+      name: "Leave Management",
+      href: "/dashboard/leave-management",
+    },
   ];
 
   const isActive = (href) => location.pathname === href;
+
+  const handleLogout = () => {
+    // Clear authentication data
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    // Navigate to landing page
+    navigate("/");
+  };
 
   return (
     <aside className="sidebar">
@@ -41,9 +50,9 @@ const Sidebar = () => {
       </nav>
 
       <div className="sidebar-footer">
-        <button className="logout-btn">
+        <button onClick={handleLogout} className="logout-btn">
           <LogOut className="logout-icon" />
-          Logout
+          <span className="logout-text">Logout</span>
         </button>
       </div>
     </aside>

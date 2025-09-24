@@ -237,10 +237,7 @@ const LeaveManagement = () => {
                   </option>
                 ))}
               </select>
-              <button className="btn-secondary-small">
-                <Download className="btn-icon" />
-                Export Report
-              </button>
+              
             </div>
           </div>
         </div>

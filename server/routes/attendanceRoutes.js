@@ -11,7 +11,8 @@ import {
   checkOut,
   getEmployeeAttendance,
   markAbsentEmployees,
-  getEnhancedAttendance
+  getEnhancedAttendance,
+  getSalaryReport
 } from '../controllers/attendanceController.js';
 
 const router = express.Router();
@@ -51,5 +52,8 @@ router.post('/mark-absent', markAbsentEmployees);
 
 // GET /api/attendance/enhanced - Get enhanced attendance records
 router.get('/enhanced', getEnhancedAttendance);
+
+// GET /api/attendance/salary-report - Get salary report for a month
+router.get('/salary-report', getSalaryReport);
 
 export default router;

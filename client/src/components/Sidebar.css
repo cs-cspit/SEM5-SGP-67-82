@@ -138,40 +138,147 @@
 }
 
 .sidebar-footer {
-  padding: 20px 16px;
+  padding: 20px 12px;
   border-top: 1px solid rgba(13, 71, 161, 0.1);
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   position: relative;
   z-index: 2;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.owner-portal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 14px 16px 14px 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #7c3aed;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  cursor: pointer;
+  width: 100%;
+  backdrop-filter: blur(5px);
+  box-sizing: border-box;
+  min-height: 48px;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  text-overflow: ellipsis;
+}
+
+.owner-portal-btn:hover {
+  background: rgba(124, 58, 237, 0.9);
+  border-color: rgba(124, 58, 237, 0.9);
+  color: white;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.owner-portal-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  border-radius: 0 4px 4px 0;
+  z-index: 1;
+}
+
+.owner-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.owner-portal-btn:hover .owner-icon {
+  transform: scale(1.1);
+}
+
+.owner-portal-btn .owner-text {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .logout-btn {
   display: flex;
   align-items: center;
-  padding: 14px 16px;
-  border-radius: 22px;
+  justify-content: flex-start;
+  padding: 14px 16px 14px 20px;
+  border-radius: 12px;
   text-decoration: none;
   color: #d32f2f;
   font-weight: 500;
   font-size: 14px;
   transition: all 0.3s ease;
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(211, 47, 47, 0.2);
+  border: 1px solid rgba(211, 47, 47, 0.3);
   cursor: pointer;
   width: 100%;
   backdrop-filter: blur(5px);
+  box-sizing: border-box;
+  min-height: 48px;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  text-overflow: ellipsis;
 }
 
 .logout-btn:hover {
-  background: rgba(255, 245, 245, 0.8);
-  border-color: rgba(211, 47, 47, 0.3);
+  background: rgba(211, 47, 47, 0.9);
+  border-color: rgba(211, 47, 47, 0.9);
+  color: white;
   transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+.logout-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
+  border-radius: 0 4px 4px 0;
+  z-index: 1;
 }
 
 .logout-icon {
   width: 20px;
   height: 20px;
   margin-right: 12px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.logout-btn:hover .logout-icon {
+  transform: scale(1.1);
+}
+
+.logout-btn .logout-text {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

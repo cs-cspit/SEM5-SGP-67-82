@@ -2,28 +2,15 @@ import React, { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
-  Download,
   Filter,
   Search,
   ChevronDown,
-  Eye,
   Edit,
   CheckCircle,
   XCircle,
-  Calculator,
   RefreshCw,
   AlertCircle,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
 import "./Attendance.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
@@ -276,7 +263,7 @@ const Attendance = () => {
     }, 600000); // 600000ms = 10 minutes
 
     return () => clearInterval(pageRefreshId);
-  }, []); // Empty dependency array means this runs once on mount // Filter attendance data
+  }, []); // Empty dependency array means this runs once on mount   // Filter attendance data
   const filteredAttendance = attendanceData.filter((employee) => {
     const matchesSearch =
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -344,14 +331,6 @@ const Attendance = () => {
                   className={`btn-icon ${loading ? "rotating" : ""}`}
                 />
                 Refresh
-              </button>
-              <button className="btn-secondary-small">
-                <Download className="btn-icon" />
-                Export Report
-              </button>
-              <button className="btn-primary-small">
-                <Calculator className="btn-icon" />
-                Calculate Salaries
               </button>
             </div>
           </div>
