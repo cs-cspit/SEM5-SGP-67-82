@@ -7,7 +7,7 @@ const departmentSchema = new mongoose.Schema(
       required: [true, "Department name is required"],
       unique: true,
       trim: true,
-      enum: ["Engineering", "Product", "Design", "Human Resources", "Marketing", "Analytics"],
+      enum: ["Engineering", "Human Resources", "Marketing", "Finance", "Operations"],
     },
     description: {
       type: String,

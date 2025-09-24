@@ -1,5 +1,6 @@
 import Attendance from '../models/Attendance.js';
 import Employee from '../models/Employee.js';
+import { roundSalary } from '../utils/salaryUtils.js';
 
 // Mark attendance
 export const markAttendance = async (req, res) => {
@@ -7,6 +8,15 @@ export const markAttendance = async (req, res) => {
     const { employeeId, method, data } = req.body;
     
     console.log('Marking attendance:', { employeeId, method, data });
+
+    // Get today's date (start of day)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if today is Sunday
+    if (isSunday(today)) {
+      return res.status(400).json({ message: 'Cannot mark attendance on Sundays - it is an off day' });
+    }
 
     // Get employee details and validate employee exists
     const employee = await Employee.findById(employeeId);
@@ -19,10 +29,6 @@ export const markAttendance = async (req, res) => {
     if (employee.status !== 'Active' && employee.status !== 'On Leave') {
       return res.status(400).json({ message: 'Cannot mark attendance for employee with this status' });
     }
-
-    // Get today's date (start of day)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     // Check if attendance already marked today
     const existingAttendance = await Attendance.findOne({
@@ -135,11 +141,7 @@ export const getAttendance = async (req, res) => {
         approvalStatus: record.approvalStatus,
         method: record.method,
         hourlyRate: hourlyRate,
-        regularHours: record.regularHours || 0,
-        overtimeHours: record.overtimeHours || 0,
-        overtime: record.overtime || record.overtimeHours || 0,
         regularPay: record.regularPay || 0,
-        overtimePay: record.overtimePay || 0,
         totalPay: record.totalPay || 0,
         dailySalary: record.dailySalary || record.totalPay || 0,
         location: record.location,
@@ -303,27 +305,22 @@ export const approveAttendance = async (req, res) => {
       // If approving a check-out request, calculate salary
       if (attendance.requestType === 'checkout' && attendance.checkInTime && attendance.checkOutTime) {
         const employee = attendance.employee;
-        
-        // Recalculate working hours
-        const workingHours = calculateWorkingHours(attendance.checkInTime, attendance.checkOutTime);
-        attendance.workingHours = workingHours;
-        attendance.totalHours = workingHours;
-
-        // Calculate salary based on working hours
         const hourlyRate = employee.hourlySalary || 15; // Default rate if not set
-        const regularHours = Math.min(workingHours, 8); // Regular hours (up to 8)
-        const overtimeHours = Math.max(0, workingHours - 8); // Overtime hours
         
-        const regularPay = regularHours * hourlyRate;
-        const overtimePay = overtimeHours * hourlyRate * 1.5; // 1.5x rate for overtime
+        // Calculate detailed pay with partial minutes
+        const payDetails = calculateDetailedPay(
+          attendance.checkInTime, 
+          attendance.checkOutTime, 
+          hourlyRate, 
+          attendance.breakTime || 1
+        );
         
-        attendance.regularHours = regularHours;
-        attendance.overtimeHours = overtimeHours;
-        attendance.overtime = overtimeHours;
-        attendance.regularPay = Math.round(regularPay * 100) / 100; // Round to 2 decimal places
-        attendance.overtimePay = Math.round(overtimePay * 100) / 100;
-        attendance.totalPay = Math.round((regularPay + overtimePay) * 100) / 100;
-        attendance.dailySalary = attendance.totalPay;
+        // Update attendance with calculated values
+        attendance.totalHours = payDetails.totalHours;
+        attendance.workingHours = payDetails.workingHours;
+        attendance.regularPay = payDetails.regularPay;
+        attendance.totalPay = payDetails.totalPay;
+        attendance.dailySalary = payDetails.totalPay;
         attendance.hourlyRate = hourlyRate;
       }
 
@@ -339,11 +336,7 @@ export const approveAttendance = async (req, res) => {
         attendance.checkOut = undefined;
         attendance.workingHours = 0;
         attendance.totalHours = 0;
-        attendance.regularHours = 0;
-        attendance.overtimeHours = 0;
-        attendance.overtime = 0;
         attendance.regularPay = 0;
-        attendance.overtimePay = 0;
         attendance.totalPay = 0;
         attendance.dailySalary = 0;
       }
@@ -377,6 +370,15 @@ export const checkIn = async (req, res) => {
     
     console.log('Processing check-in request:', { employeeId, location, timestamp });
 
+    // Get today's date (start of day)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if today is Sunday
+    if (isSunday(today)) {
+      return res.status(400).json({ message: 'Cannot check in on Sundays - it is an off day' });
+    }
+
     // Get employee details and validate employee exists
     const employee = await Employee.findById(employeeId);
     if (!employee) {
@@ -387,10 +389,6 @@ export const checkIn = async (req, res) => {
     if (employee.status !== 'Active' && employee.status !== 'On Leave') {
       return res.status(400).json({ message: 'Cannot check in for employee with this status' });
     }
-
-    // Get today's date (start of day)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     // Check if already has a check-in request today (pending or approved)
     const existingAttendance = await Attendance.findOne({
@@ -448,6 +446,15 @@ export const checkOut = async (req, res) => {
     
     console.log('Processing check-out:', { employeeId, location, timestamp });
 
+    // Get today's date (start of day)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if today is Sunday
+    if (isSunday(today)) {
+      return res.status(400).json({ message: 'Cannot check out on Sundays - it is an off day' });
+    }
+
     // Get employee details and validate employee exists
     const employee = await Employee.findById(employeeId);
     if (!employee) {
@@ -458,10 +465,6 @@ export const checkOut = async (req, res) => {
     if (employee.status !== 'Active' && employee.status !== 'On Leave') {
       return res.status(400).json({ message: 'Cannot check out for employee with this status' });
     }
-
-    // Get today's date (start of day)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
     // Find today's attendance record
     const attendance = await Attendance.findOne({
@@ -485,23 +488,21 @@ export const checkOut = async (req, res) => {
     attendance.checkOutTime = new Date(timestamp);
     attendance.approvalStatus = 'approved'; // Auto-approve check-out
     
-    // Calculate working hours and salary immediately
-    const workingHours = calculateWorkingHours(attendance.checkInTime, attendance.checkOutTime);
-    attendance.workingHours = workingHours;
-
-    // Calculate salary based on working hours
+    // Calculate working hours and salary immediately with break time subtraction
     const hourlyRate = employee.hourlySalary || 15; // Default rate if not set
-    const regularHours = Math.min(workingHours, 8); // Regular hours (up to 8)
-    const overtimeHours = Math.max(0, workingHours - 8); // Overtime hours
+    const payDetails = calculateDetailedPay(
+      attendance.checkInTime, 
+      attendance.checkOutTime, 
+      hourlyRate, 
+      attendance.breakTime || 1
+    );
     
-    const regularPay = regularHours * hourlyRate;
-    const overtimePay = overtimeHours * hourlyRate * 1.5; // 1.5x rate for overtime
-    
-    attendance.regularHours = regularHours;
-    attendance.overtimeHours = overtimeHours;
-    attendance.regularPay = Math.round(regularPay * 100) / 100; // Round to 2 decimal places
-    attendance.overtimePay = Math.round(overtimePay * 100) / 100;
-    attendance.totalPay = Math.round((regularPay + overtimePay) * 100) / 100;
+    // Update attendance with calculated values
+    attendance.totalHours = payDetails.totalHours;
+    attendance.workingHours = payDetails.workingHours;
+    attendance.regularPay = payDetails.regularPay;
+    attendance.totalPay = payDetails.totalPay;
+    attendance.hourlyRate = hourlyRate;
 
     await attendance.save();
 
@@ -517,8 +518,27 @@ export const checkOut = async (req, res) => {
   }
 };
 
-// Helper function to calculate working hours with rounding logic
-function calculateWorkingHours(checkInTime, checkOutTime) {
+// Helper function to check if a date is Sunday
+function isSunday(date) {
+  const day = new Date(date);
+  return day.getDay() === 0; // 0 = Sunday
+}
+
+// Helper function to calculate payment based on partial minutes
+function calculatePartialHourPayment(minutes, hourlyRate) {
+  if (minutes >= 45) {
+    return hourlyRate * 0.75;
+  } else if (minutes >= 30) {
+    return hourlyRate * 0.5;
+  } else if (minutes >= 15) {
+    return hourlyRate * 0.25;
+  } else {
+    return 0;
+  }
+}
+
+// Helper function to calculate working hours with rounding logic and break time subtraction
+function calculateWorkingHours(checkInTime, checkOutTime, breakTime = 1) {
   const checkIn = new Date(checkInTime);
   const checkOut = new Date(checkOutTime);
   
@@ -526,16 +546,50 @@ function calculateWorkingHours(checkInTime, checkOutTime) {
   const diffMs = checkOut - checkIn;
   
   // Convert to hours
-  const hours = diffMs / (1000 * 60 * 60);
+  const totalHours = diffMs / (1000 * 60 * 60);
   
-  // Calculate minutes
-  const totalMinutes = Math.floor(diffMs / (1000 * 60));
-  const remainderMinutes = totalMinutes % 60;
+  // Subtract break time (default 1 hour) from total hours
+  const workingMilliseconds = Math.max(0, diffMs - (breakTime * 60 * 60 * 1000));
+  const workingHours = workingMilliseconds / (1000 * 60 * 60);
   
-  // Round up if minutes > 0 (as requested)
-  const roundedHours = remainderMinutes > 0 ? Math.ceil(hours) : Math.floor(hours);
+  return Math.max(0, workingHours); // Ensure non-negative
+}
+
+// Helper function to calculate detailed pay with partial minutes (simplified - no overtime)
+function calculateDetailedPay(checkInTime, checkOutTime, hourlyRate, breakTime = 1) {
+  const checkIn = new Date(checkInTime);
+  const checkOut = new Date(checkOutTime);
   
-  return Math.max(0, roundedHours); // Ensure non-negative
+  // Calculate working time after break subtraction
+  const totalMilliseconds = checkOut - checkIn;
+  const workingMilliseconds = Math.max(0, totalMilliseconds - (breakTime * 60 * 60 * 1000));
+  const totalWorkingMinutes = workingMilliseconds / (1000 * 60);
+  
+  // Calculate full hours and remaining minutes
+  const fullHours = Math.floor(totalWorkingMinutes / 60);
+  const remainingMinutes = totalWorkingMinutes % 60;
+  
+  // Calculate pay for all hours at the same rate
+  let totalPay = 0;
+  
+  // Calculate pay for full hours
+  totalPay = fullHours * hourlyRate;
+  
+  // Add partial hour payment for remaining minutes
+  totalPay += calculatePartialHourPayment(remainingMinutes, hourlyRate);
+  
+  const workingHours = workingMilliseconds / (1000 * 60 * 60);
+  
+  // Apply custom rounding logic to salary amounts
+  const roundedRegularPay = roundSalary(totalPay);
+  const roundedTotalPay = roundSalary(totalPay);
+  
+  return {
+    totalHours: totalMilliseconds / (1000 * 60 * 60),
+    workingHours: workingHours,
+    regularPay: roundedRegularPay,
+    totalPay: roundedTotalPay
+  };
 }
 
 // Get employee attendance for specific date
@@ -575,6 +629,49 @@ export const markAbsentEmployees = async (req, res) => {
     
     console.log('Marking absent employees for date:', targetDate);
 
+    // Check if the target date is Sunday
+    if (isSunday(targetDate)) {
+      // For Sundays, mark all active employees as "Off Day"
+      const activeEmployees = await Employee.find({ status: 'Active' });
+      
+        const offDayRecords = activeEmployees.map(employee => ({
+          employee: employee._id,
+          employeeId: employee.employeeId,
+          name: employee.name,
+          department: employee.department,
+          position: employee.position,
+          date: targetDate,
+          status: 'Off Day',
+          approvalStatus: 'approved', // Auto-approved off days
+          method: 'auto',
+          checkIn: null,
+          checkOut: null,
+          checkInTime: null,
+          checkOutTime: null,
+          totalHours: 0,
+          workingHours: 0,
+          regularPay: 0,
+          totalPay: 0,
+          dailySalary: 0,
+          hourlyRate: employee.hourlySalary || 15
+        }));      // Remove existing records for this Sunday and recreate as off days
+      await Attendance.deleteMany({ date: targetDate });
+      const createdRecords = await Attendance.insertMany(offDayRecords);
+
+      return res.json({
+        message: `Successfully marked ${createdRecords.length} employees as "Off Day" for Sunday`,
+        date: targetDate.toISOString().split('T')[0],
+        totalEmployees: activeEmployees.length,
+        offDayMarked: createdRecords.length,
+        offDayEmployees: createdRecords.map(record => ({
+          name: record.name,
+          employeeId: record.employeeId,
+          department: record.department
+        }))
+      });
+    }
+
+    // For regular weekdays, proceed with normal absent marking
     // Get all active employees (only active employees should be marked absent)
     const activeEmployees = await Employee.find({ status: 'Active' });
     
@@ -617,11 +714,7 @@ export const markAbsentEmployees = async (req, res) => {
       checkOutTime: null,
       totalHours: 0,
       workingHours: 0,
-      regularHours: 0,
-      overtimeHours: 0,
-      overtime: 0,
       regularPay: 0,
-      overtimePay: 0,
       totalPay: 0,
       dailySalary: 0,
       hourlyRate: employee.hourlySalary || 15
@@ -711,11 +804,7 @@ export const getEnhancedAttendance = async (req, res) => {
         approvalStatus: record.approvalStatus,
         method: record.method,
         hourlyRate: hourlyRate,
-        regularHours: record.regularHours || 0,
-        overtimeHours: record.overtimeHours || 0,
-        overtime: record.overtime || record.overtimeHours || 0,
         regularPay: record.regularPay || 0,
-        overtimePay: record.overtimePay || 0,
         totalPay: record.totalPay || 0,
         dailySalary: record.dailySalary || record.totalPay || 0,
         location: record.location,
@@ -726,6 +815,165 @@ export const getEnhancedAttendance = async (req, res) => {
     res.json(enhancedAttendance);
   } catch (error) {
     console.error('Error fetching enhanced attendance:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Create off day records for all Sundays in a given month
+export const createSundayOffDays = async (req, res) => {
+  try {
+    const { year, month } = req.body; // month should be 1-12
+    
+    if (!year || !month) {
+      return res.status(400).json({ message: 'Year and month are required' });
+    }
+
+    const startDate = new Date(year, month - 1, 1); // month is 0-indexed in JS
+    const endDate = new Date(year, month, 0); // Last day of the month
+    
+    const sundays = [];
+    const currentDate = new Date(startDate);
+    
+    // Find all Sundays in the month
+    while (currentDate <= endDate) {
+      if (currentDate.getDay() === 0) { // Sunday
+        sundays.push(new Date(currentDate));
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const activeEmployees = await Employee.find({ status: 'Active' });
+    let totalCreated = 0;
+
+    for (const sunday of sundays) {
+      // Check if records already exist for this Sunday
+      const existingRecords = await Attendance.find({ date: sunday });
+      
+      if (existingRecords.length === 0) {
+        const offDayRecords = activeEmployees.map(employee => ({
+          employee: employee._id,
+          employeeId: employee.employeeId,
+          name: employee.name,
+          department: employee.department,
+          position: employee.position,
+          date: sunday,
+          status: 'Off Day',
+          approvalStatus: 'approved',
+          method: 'auto',
+          checkIn: null,
+          checkOut: null,
+          checkInTime: null,
+          checkOutTime: null,
+          totalHours: 0,
+          workingHours: 0,
+          regularPay: 0,
+          totalPay: 0,
+          dailySalary: 0,
+          hourlyRate: employee.hourlySalary || 15
+        }));
+
+        await Attendance.insertMany(offDayRecords);
+        totalCreated += offDayRecords.length;
+      }
+    }
+
+    res.json({
+      message: `Successfully created off day records for ${sundays.length} Sundays in ${month}/${year}`,
+      sundaysProcessed: sundays.length,
+      recordsCreated: totalCreated,
+      sundays: sundays.map(date => date.toISOString().split('T')[0])
+    });
+
+  } catch (error) {
+    console.error('Error creating Sunday off days:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get salary report data for a specific month
+export const getSalaryReport = async (req, res) => {
+  try {
+    const { year, month } = req.query;
+    
+    if (!year || !month) {
+      return res.status(400).json({ message: 'Year and month are required' });
+    }
+
+    // Create date range for the month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+    
+    // Get all attendance records for the month
+    const attendanceRecords = await Attendance.find({
+      date: { $gte: startDate, $lte: endDate },
+      approvalStatus: 'approved'
+    }).populate('employee', 'name employeeId department position hourlySalary');
+
+    // Group by employee and calculate totals
+    const employeeSummary = {};
+    
+    attendanceRecords.forEach(record => {
+      const empId = record.employeeId;
+      
+      if (!employeeSummary[empId]) {
+        employeeSummary[empId] = {
+          employeeId: record.employeeId,
+          name: record.name,
+          department: record.department,
+          position: record.position,
+          hourlyRate: record.hourlyRate || record.employee?.hourlySalary || 15,
+          totalHours: 0,
+          workingDays: 0,
+          presentDays: 0,
+          absentDays: 0,
+          offDays: 0,
+          totalSalary: 0,
+          attendanceRate: 0
+        };
+      }
+      
+      const emp = employeeSummary[empId];
+      emp.totalHours += record.workingHours || 0;
+      emp.totalSalary += record.totalPay || 0;
+      
+      if (record.status === 'Present') {
+        emp.presentDays++;
+      } else if (record.status === 'Absent') {
+        emp.absentDays++;
+      } else if (record.status === 'Off Day') {
+        emp.offDays++;
+      }
+      
+      emp.workingDays = emp.presentDays + emp.absentDays;
+      emp.attendanceRate = emp.workingDays > 0 ? ((emp.presentDays / emp.workingDays) * 100) : 0;
+    });
+
+    // Convert to array and apply rounding to salary values
+    const employees = Object.values(employeeSummary).map(emp => ({
+      ...emp,
+      totalSalary: roundSalary(emp.totalSalary)
+    }));
+    
+    const totalSalarySum = employees.reduce((sum, emp) => sum + emp.totalSalary, 0);
+    
+    const summary = {
+      totalEmployees: employees.length,
+      totalHours: employees.reduce((sum, emp) => sum + emp.totalHours, 0),
+      totalSalary: roundSalary(totalSalarySum),
+      averageAttendance: employees.length > 0 ? 
+        employees.reduce((sum, emp) => sum + emp.attendanceRate, 0) / employees.length : 0
+    };
+
+    res.json({
+      summary,
+      employees,
+      monthName: new Date(year, month - 1).toLocaleString('default', { month: 'long' }),
+      year: year,
+      month: month
+    });
+
+  } catch (error) {
+    console.error('Error fetching salary report:', error);
     res.status(500).json({ message: error.message });
   }
 };

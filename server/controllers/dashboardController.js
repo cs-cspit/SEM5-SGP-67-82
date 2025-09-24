@@ -189,7 +189,6 @@ export const quickApproveAttendance = async (req, res) => {
       attendance.checkOut = null;
       attendance.totalHours = 0;
       attendance.workingHours = 0;
-      attendance.regularHours = 0;
       attendance.overtimeHours = 0;
       attendance.overtime = 0;
       attendance.regularPay = 0;
@@ -263,7 +262,6 @@ export const getTodayAttendanceSummary = async (req, res) => {
           checkOutTime: null,
           totalHours: 0,
           workingHours: 0,
-          regularHours: 0,
           overtimeHours: 0,
           overtime: 0,
           regularPay: 0,

@@ -186,7 +186,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="welcome-section">
           <div className="welcome-content">
-            <h1 className="welcome-title">Hello Admin!</h1>
+            <h1 className="welcome-title">Hello HR!</h1>
             <p className="welcome-subtitle">
               Here's what's happening with your team today
             </p>

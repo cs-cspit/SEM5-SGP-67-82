@@ -6,5 +6,9 @@ export default defineConfig({
   plugins: [react()],
   define: {
     'process.env': process.env
+  },
+  server: {
+    port: 5173, // Default Vite port for HR/Admin Portal
+    host: true // Allow external connections
   }
 });

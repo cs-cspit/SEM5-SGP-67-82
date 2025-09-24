@@ -9,10 +9,10 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import departmentRoutes from './routes/departmentRoutes.js';
 import attendanceRoutes from './routes/attendanceRoutes.js';
 import leaveRoutes from './routes/leaveRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
 
-// Get directory path for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -21,13 +21,22 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+// Configure CORS to allow employee portal (5000), HR/Admin portal (5173), and owner portal (3000)
+app.use(cors({
+  origin: [
+    'http://localhost:5173', // HR/Admin Portal (default Vite port)
+    'http://localhost:3000', // Owner Portal (separate)
+    'http://localhost:5000'  // Employee Portal
+  ],
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' })); // Increased limit for face images
 
 // Serve static files from employee-portal directory
 app.use('/employee-portal', express.static(path.join(__dirname, '../employee-portal')));
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/departments', departmentRoutes);

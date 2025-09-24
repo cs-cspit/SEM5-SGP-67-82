@@ -164,16 +164,12 @@ const LeaveManagement = () => {
         .length.toString(),
       icon: CheckCircle,
       type: "approved",
-      change: "+12%",
-      changeType: "positive",
     },
     {
       title: "Total Applications",
       value: leaveApplications.length.toString(),
       icon: FileText,
       type: "total",
-      change: "+8%",
-      changeType: "positive",
     },
   ];
 
@@ -241,10 +237,7 @@ const LeaveManagement = () => {
                   </option>
                 ))}
               </select>
-              <button className="btn-secondary-small">
-                <Download className="btn-icon" />
-                Export Report
-              </button>
+              
             </div>
           </div>
         </div>

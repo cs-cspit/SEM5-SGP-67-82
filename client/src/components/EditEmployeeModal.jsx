@@ -259,11 +259,10 @@ const EditEmployeeModal = ({
                 >
                   <option value="">Select department</option>
                   <option value="Engineering">Engineering</option>
-                  <option value="Product">Product</option>
-                  <option value="Design">Design</option>
                   <option value="Human Resources">Human Resources</option>
                   <option value="Marketing">Marketing</option>
-                  <option value="Analytics">Analytics</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Operations">Operations</option>
                 </select>
                 {errors.department && (
                   <span className="error-message">{errors.department}</span>

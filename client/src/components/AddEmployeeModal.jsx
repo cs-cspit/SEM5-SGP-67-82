@@ -55,11 +55,8 @@ const AddEmployeeModal = ({ isOpen, onClose, onSubmit }) => {
 
   const departments = [
     "Engineering",
-    "Product",
-    "Design",
     "Human Resources",
     "Marketing",
-    "Analytics",
     "Finance",
     "Operations",
   ];

@@ -17,7 +17,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 70px;
+  height: 50px;
   z-index: 1000;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
@@ -27,10 +27,10 @@
 
 .layout-sidebar {
   position: fixed;
-  top: 70px;
+  top: 50px;
   left: 0;
   width: 280px;
-  height: calc(100vh - 70px);
+  height: calc(100vh - 50px);
   z-index: 900;
   background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 50%, #81d4fa 100%);
   overflow-y: auto;
@@ -41,7 +41,7 @@
 
 .layout-main {
   position: fixed;
-  top: 70px;
+  top: 50px;
   left: 280px;
   right: 0;
   bottom: 0;
@@ -54,7 +54,7 @@
 
 .main-content {
   padding: 32px;
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - 50px);
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
 }
 
